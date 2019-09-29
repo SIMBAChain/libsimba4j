@@ -96,7 +96,7 @@ to SimbaFactory factory:
 ```
 try {
    SimbaChain simba = SimbaFactory.factory()
-       .createSimbaChain("http://localhost:8080/v1/", "simbachain",
+       .createSimbaChain("http://localhost:8080/", "simbachain",
              new SimbaChainConfig("04d1729f7144873851a745d2ae85639f55c8e3de5aea626a2bcd0055c01ba6fc",
                                        wallet));
 } catch(SimbaException se) {
@@ -132,12 +132,12 @@ try {
 
 The response will contain the UID of the request. This UID can be used to query for the transaction.
 
-This can be used to determine the status of the transaction:
+This can be used to determine the state of the transaction:
 
 ```
 try {
-    TransactionStatus status = simba.checkTransactionStatus(response.getRequestIdentitier());
-    System.out.println(status.getStatus());
+    Transaction txn = simba.getTransaction(response.getRequestIdentitier());
+    System.out.println(txn.getState());
 } catch(SimbaException se) {
     se.printStackTrace();
 }
