@@ -123,12 +123,14 @@ try {
                                  .and("number", 5)
                                  .and("name", "Foo");
     Simba.UploadFile uploadFile = new Simba.UploadFile("file_0", "text/plain", new File("text.txt"));
-    MethodResponse response = simba.callMethod("myMethod", data1, uploadFile);
+    CallResponse response = simba.callMethod("myMethod", data1, uploadFile);
     System.out.println(response.getRequestIdentitier());
 } catch(SimbaException se) {
     se.printStackTrace();
 }
 ```
+
+UploadFile objects can also be created from an input stream, byte array or a path to a file.
 
 The response will contain the UID of the request. This UID can be used to query for the transaction.
 
@@ -142,6 +144,17 @@ try {
     se.printStackTrace();
 }
 ```
+
+You can also wait for the transaction to initialize or complete by requesting a future object:
+
+```
+Future<Transaction> txn = simba.waitForTransactionCompletion(
+            response.getRequestIdentitier());
+System.out.println(txn.get().getState());
+```
+
+The polling interval and total time to wait for the transaction to complete are configurable.
+Please check the Java docs for details.
 
 
 ## Querying
@@ -283,6 +296,115 @@ error message aims to provide details of the error returned from the server.
 
 LibSimba4J uses the slf4j logging API library and is not tied to a specific logging implementation.
 All logging is done at a debug level.
+
+## Example
+
+```
+import java.io.ByteArrayOutputStream;
+import java.nio.charset.Charset;
+import java.util.List;
+import java.util.concurrent.Future;
+
+import com.simbachain.simba.Balance;
+import com.simbachain.simba.CallResponse;
+import com.simbachain.simba.Funds;
+import com.simbachain.simba.JsonData;
+import com.simbachain.simba.Manifest;
+import com.simbachain.simba.PagedResult;
+import com.simbachain.simba.Query;
+import com.simbachain.simba.Simba;
+import com.simbachain.simba.SimbaFactory;
+import com.simbachain.simba.Transaction;
+import com.simbachain.simba.com.SimbaChain;
+import com.simbachain.simba.com.SimbaChainConfig;
+import com.simbachain.wallet.FileWallet;
+import com.simbachain.wallet.Wallet;
+
+/**
+ *  Simple example that runs through most of the Simba API.
+ */
+public class SimbaApi {
+
+    
+    public static void main(String[] args) throws Exception {
+        // Create a wallet
+        Wallet wallet = new FileWallet("./keys", "wallet test");
+        wallet.loadOrCreateWallet("password");
+
+        // Instantiate Simba
+        SimbaChain simba = SimbaFactory.factory()
+                                       .createSimbaChain("https://api.simbachain.com",
+                                           "libSimba-SimbaChat-Quorum", new SimbaChainConfig(
+                                               "04d1729f7144873851a745d2ae85639f55c8e3de5aea626a2bcd0055c01ba6fc",
+                                               wallet));
+        // get the balance
+        Balance balance = simba.getBalance();
+        System.out.println(String.format("Current balance: %s", balance));
+
+        // Potentially add funds, depending on the nature of the blockchain and faucet.
+        Funds funds = simba.addFunds();
+        System.out.println(String.format("Current funds: %s", funds));
+
+        // Call a method
+        JsonData data = JsonData.with("assetId", "123")
+                                .and("name", "A Java Room")
+                                .and("createdBy", "Kieran");
+        CallResponse response = simba.callMethod("createRoom", data);
+        
+        // Wait for the transaction to complete using the response ID
+        Future<Transaction> txn = simba.waitForTransactionCompletion(
+            response.getRequestIdentitier());
+
+        System.out.println(String.format("createRoom  transaction state: %s", txn.get()
+                                                                                 .getState()));
+        
+        // Call a method with an upload file, here created as a string.
+        String s = "hello there Java Room!";
+        JsonData data1 = JsonData.with("assetId", "123")
+                                 .and("chatRoom", "A Java Room")
+                                 .and("message", "See attached")
+                                 .and("sentBy", "Kieran");
+
+        CallResponse response1 = simba.callMethod("sendMessage", data1,
+            new Simba.UploadFile("my_file", "text/plain", s.getBytes(Charset.forName("UTF-8"))));
+        Future<Transaction> txn1 = simba.waitForTransactionCompletion(
+            response1.getRequestIdentitier());
+
+        // Wait for the transaction to complete using the response ID
+        System.out.println(String.format("sendMessage transaction state: %s", txn1.get()
+                                                                                  .getState()));
+
+        // Grab the metadata
+        Manifest manifest = simba.getBundleMetadataForTransaction(response1.getRequestIdentitier());
+        System.out.println(String.format("Manifest files: %s", manifest.getFiles()));
+
+        // Grab the file in the metadata and write to an output steram
+        ByteArrayOutputStream bout = new ByteArrayOutputStream();
+        simba.getBundleFileForTransaction(response1.getRequestIdentitier(), "my_file", bout);
+
+        System.out.println(String.format("File from bundle: %s", bout.toString()));
+
+        // Query transactions for the 'sendMessage' transaction where the chatRoom name
+        // contains the string 'Java'.
+        PagedResult<Transaction> results = simba.getTransactions("sendMessage",
+            Query.in("chatRoom", "Java"));
+        List<? extends Transaction> txns = results.getResults();
+        for (Transaction transaction : txns) {
+            System.out.println(String.format("returned transaction: %s", transaction.getInputs()));
+        }
+        // Call next, if there are more results.
+        while (results.getNext() != null) {
+            results = simba.next(results);
+            txns = results.getResults();
+            for (Transaction transaction : txns) {
+                System.out.println(
+                    String.format("next returned transaction: %s", transaction.getInputs()));
+            }
+        }
+    }
+}
+
+```
 
 
 

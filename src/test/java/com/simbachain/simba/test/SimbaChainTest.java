@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.simbachain.SimbaException;
+import com.simbachain.simba.CallResponse;
 import com.simbachain.simba.SimbaFactory;
 import com.simbachain.simba.PagedResult;
 import com.simbachain.simba.Query;
@@ -35,7 +36,6 @@ import com.simbachain.simba.com.SimbaChain;
 import com.simbachain.simba.Balance;
 import com.simbachain.simba.Funds;
 import com.simbachain.simba.JsonData;
-import com.simbachain.simba.MethodResponse;
 import com.simbachain.simba.com.SimbaChainConfig;
 import com.simbachain.simba.test.server.TestServer;
 import com.simbachain.wallet.FileWallet;
@@ -78,7 +78,7 @@ public class SimbaChainTest {
         SimbaChain simba = SimbaFactory.factory()
                                        .createSimbaChain("http://localhost:8080/", "simbachain",
                                            new SimbaChainConfig(
-                                               "04d1729f7144873851a745d2ae85639f55c8e3de5aea626a2bcd0055c01ba6fc",
+                                               "04d1729f7144873851a745d2a000039f55c8e3de5aea626a2bcd0055c01ba6fc",
                                                wallet));
         Transaction txn = simba.getTransaction("1234567890");
         assertEquals(txn.getState(), Transaction.State.INITIALIZED);  // no receipt in payload
@@ -92,7 +92,7 @@ public class SimbaChainTest {
         SimbaChain simba = SimbaFactory.factory()
                                        .createSimbaChain("http://localhost:8080/", "simbachain",
                                            new SimbaChainConfig(
-                                               "04d1729f7144873851a745d2ae85639f55c8e3de5aea626a2bcd0055c01ba6fc",
+                                               "04d1729f7144873851a745d2a000039f55c8e3de5aea626a2bcd0055c01ba6fc",
                                                wallet));
         assertEquals(simba.getMetadata()
                           .getApiName(), "simbachain");
@@ -112,13 +112,13 @@ public class SimbaChainTest {
         SimbaChain simba = SimbaFactory.factory()
                                        .createSimbaChain("http://localhost:8080/", "simbachain",
                                            new SimbaChainConfig(
-                                               "04d1729f7144873851a745d2ae85639f55c8e3de5aea626a2bcd0055c01ba6fc",
+                                               "04d1729f7144873851a745d2a000039f55c8e3de5aea626a2bcd0055c01ba6fc",
                                                wallet));
 
         JsonData data = JsonData.with("assetId", "1234")
                                 .and("createdBy", "Andrew")
                                 .and("name", "Foo");
-        MethodResponse response = simba.callMethod("method1", data);
+        CallResponse response = simba.callMethod("method1", data);
         assertNotNull(response.getRequestIdentitier());
     }
 
@@ -130,7 +130,7 @@ public class SimbaChainTest {
         SimbaChain simba = SimbaFactory.factory()
                                        .createSimbaChain("http://localhost:8080/", "simbachain",
                                            new SimbaChainConfig(
-                                               "04d1729f7144873851a745d2ae85639f55c8e3de5aea626a2bcd0055c01ba6fc",
+                                               "04d1729f7144873851a745d2a000039f55c8e3de5aea626a2bcd0055c01ba6fc",
                                                wallet));
         
         JsonData data1 = JsonData.with("assetId", "1234")
@@ -138,7 +138,7 @@ public class SimbaChainTest {
                                  .and("name", "Foo");
         Simba.UploadFile uploadFile = new Simba.UploadFile("file_0", "text/plain",
             new File("src/test/resources/text.txt"));
-        MethodResponse response = simba.callMethod("method2", data1, uploadFile);
+        CallResponse response = simba.callMethod("method2", data1, uploadFile);
         assertNotNull(response.getRequestIdentitier());
     }
 
@@ -153,7 +153,7 @@ public class SimbaChainTest {
                                            .createSimbaChain("http://localhost:8080/",
                                                "simbachainy",
                                                new SimbaChainConfig(
-                                                   "04d1729f7144873851a745d2ae85639f55c8e3de5aea626a2bcd0055c01ba6fc",
+                                                   "04d1729f7144873851a745d2a000039f55c8e3de5aea626a2bcd0055c01ba6fc",
                                                    wallet));
         } catch (SimbaException e) {
             ex = e;
@@ -170,7 +170,7 @@ public class SimbaChainTest {
         SimbaChain simba = SimbaFactory.factory()
                                        .createSimbaChain("http://localhost:8080/", "simbachain",
                                            new SimbaChainConfig(
-                                               "04d1729f7144873851a745d2ae85639f55c8e3de5aea626a2bcd0055c01ba6fc",
+                                               "04d1729f7144873851a745d2a000039f55c8e3de5aea626a2bcd0055c01ba6fc",
                                                wallet));
         Balance balance = simba.getBalance();
         assertTrue(balance.getCurrency()
@@ -186,7 +186,7 @@ public class SimbaChainTest {
         SimbaChain simba = SimbaFactory.factory()
                                        .createSimbaChain("http://localhost:8080/", "simbachain1",
                                            new SimbaChainConfig(
-                                               "04d1729f7144873851a745d2ae85639f55c8e3de5aea626a2bcd0055c01ba6fc",
+                                               "04d1729f7144873851a745d2a000039f55c8e3de5aea626a2bcd0055c01ba6fc",
                                                wallet));
         Balance balance = simba.getBalance();
         assertTrue(balance.getCurrency()
@@ -203,7 +203,7 @@ public class SimbaChainTest {
         SimbaChain simba = SimbaFactory.factory()
                                        .createSimbaChain("http://localhost:8080/", "simbachain",
                                            new SimbaChainConfig(
-                                               "04d1729f7144873851a745d2ae85639f55c8e3de5aea626a2bcd0055c01ba6fc",
+                                               "04d1729f7144873851a745d2a000039f55c8e3de5aea626a2bcd0055c01ba6fc",
                                                wallet));
         Funds funds = simba.addFunds();
         assertTrue(funds.getFaucetUrl() == null);
@@ -219,7 +219,7 @@ public class SimbaChainTest {
         SimbaChain simba = SimbaFactory.factory()
                                        .createSimbaChain("http://localhost:8080/", "simbachain1",
                                            new SimbaChainConfig(
-                                               "04d1729f7144873851a745d2ae85639f55c8e3de5aea626a2bcd0055c01ba6fc",
+                                               "04d1729f7144873851a745d2a000039f55c8e3de5aea626a2bcd0055c01ba6fc",
                                                wallet));
         Funds funds = simba.addFunds();
         assertTrue(funds.getFaucetUrl().equals("https://faucet.com"));
@@ -235,7 +235,7 @@ public class SimbaChainTest {
         SimbaChain simba = SimbaFactory.factory()
                                        .createSimbaChain("http://localhost:8080/", "simbachain",
                                            new SimbaChainConfig(
-                                               "04d1729f7144873851a745d2ae85639f55c8e3de5aea626a2bcd0055c01ba6fc",
+                                               "04d1729f7144873851a745d2a000039f55c8e3de5aea626a2bcd0055c01ba6fc",
                                                wallet));
 
         PagedResult<Transaction> response = simba.getTransactions();
@@ -257,7 +257,7 @@ public class SimbaChainTest {
         SimbaChain simba = SimbaFactory.factory()
                                        .createSimbaChain("http://localhost:8080/", "simbachain",
                                            new SimbaChainConfig(
-                                               "04d1729f7144873851a745d2ae85639f55c8e3de5aea626a2bcd0055c01ba6fc",
+                                               "04d1729f7144873851a745d2a000039f55c8e3de5aea626a2bcd0055c01ba6fc",
                                                wallet));
 
         Query.Params params = Query.in("name", "Java")
@@ -284,7 +284,7 @@ public class SimbaChainTest {
                                        .createSimbaChain("http://localhost:8080/",
                                            "simbachain",
                                            new SimbaChainConfig(
-                                               "04d1729f7144873851a745d2ae85639f55c8e3de5aea626a2bcd0055c01ba6fc",
+                                               "04d1729f7144873851a745d2a000039f55c8e3de5aea626a2bcd0055c01ba6fc",
                                                wallet));
 
         Query.Params params = Query.in("name", "Java")

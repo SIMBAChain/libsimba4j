@@ -26,6 +26,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -52,7 +53,7 @@ public class FullTransaction implements Transaction {
     @JsonProperty
     private String error;
     @JsonProperty("error_details")
-    private String errorDetails;
+    private List<Object> errorDetails;
     @JsonProperty
     private String status;
     @JsonProperty
@@ -189,11 +190,11 @@ public class FullTransaction implements Transaction {
         this.error = error;
     }
 
-    public String getErrorDetails() {
+    public List<Object> getErrorDetails() {
         return errorDetails;
     }
 
-    public void setErrorDetails(String errorDetails) {
+    public void setErrorDetails(List<Object> errorDetails) {
         this.errorDetails = errorDetails;
     }
 

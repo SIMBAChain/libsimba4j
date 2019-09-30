@@ -22,13 +22,20 @@
 
 package com.simbachain.simba;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -168,10 +175,10 @@ public abstract class Simba<C extends SimbaConfig> {
      * @param method     The method name
      * @param parameters the parameters
      * @param files      optional list of UploadFile objects
-     * @return a MethodResponse object containing the unique ID of the call.
+     * @return a CallResponse object containing the unique ID of the call.
      * @throws SimbaException if an error occurs
      */
-    public abstract MethodResponse callMethod(String method,
+    public abstract CallResponse callMethod(String method,
         JsonData parameters,
         UploadFile... files) throws SimbaException;
 
@@ -313,28 +320,201 @@ public abstract class Simba<C extends SimbaConfig> {
     public abstract Balance getBalance() throws SimbaException;
 
     /**
+     * Wait for a transaction to reach COMPLETED stage.  
+     * @param txnId The transaction or requiest ID.
+     * @param interval Interval to poll the server.
+     * @param totalSeconds Total time to wait.
+     * @return a Future object that returns a Transaction.
+     * @throws SimbaException if something goes wrong.
+     */
+    public Future<Transaction> waitForTransactionCompletion(String txnId,
+        long interval,
+        int totalSeconds) throws SimbaException {
+        return submit(txnId, interval, totalSeconds, Transaction.State.COMPLETED);
+    }
+
+    /**
+     * Wait for a transaction to reach COMPLETED stage. Polling interval is set to 1 second
+     * and total wait time is set to 10 seconds.
+     *
+     * @param txnId        The transaction or requiest ID.
+     * @return a Future object that returns a Transaction.
+     * @throws SimbaException if something goes wrong.
+     */
+    public Future<Transaction> waitForTransactionCompletion(String txnId) throws SimbaException {
+        return submit(txnId, 1000, 10, Transaction.State.COMPLETED);
+    }
+
+    /**
+     * Wait for a transaction to reach INITIALIZED stage.
+     *
+     * @param txnId        The transaction or requiest ID.
+     * @param interval     Interval to poll the server.
+     * @param totalSeconds Total time to wait.
+     * @return a Future object that returns a Transaction.
+     * @throws SimbaException if something goes wrong.
+     */
+    public Future<Transaction> waitForTransactionInitialized(String txnId,
+        long interval,
+        int totalSeconds) throws SimbaException {
+        return submit(txnId, interval, totalSeconds, Transaction.State.INITIALIZED);
+    }
+
+    /**
+     * Wait for a transaction to reach INITIALIZED stage. Polling interval is set to 1 second
+     * and total wait time is set to 10 seconds.
+     *
+     * @param txnId The transaction or requiest ID.
+     * @return a Future object that returns a Transaction.
+     * @throws SimbaException if something goes wrong.
+     */
+    public Future<Transaction> waitForTransactionInitialized(String txnId) throws SimbaException {
+        return submit(txnId, 1000, 10, Transaction.State.INITIALIZED);
+    }
+
+    private class TransactionCallable implements Callable<Transaction> {
+
+        private String txnId;
+        private long poll;
+        private int totalSeconds;
+        private Transaction.State state;
+
+        private TransactionCallable(String txnId,
+            long poll,
+            int totalSeconds,
+            Transaction.State state) {
+            this.txnId = txnId;
+            this.poll = poll;
+            this.totalSeconds = totalSeconds;
+            this.state = state;
+        }
+
+        @Override
+        public Transaction call() throws Exception {
+            Transaction txn = null;
+            long now = System.currentTimeMillis();
+            long end = now + (totalSeconds * 1000);
+            while (now < end) {
+                txn = getTransaction(txnId);
+                if (txn.getState() == state) {
+                    return txn;
+                }
+                Thread.sleep(poll);
+                now = System.currentTimeMillis();
+            }
+            return txn;
+        }
+    }
+
+    /**
      * Utility class used for file uploads.
      */
     public static class UploadFile {
 
         private String name;
         private String mimeType;
-        private File file;
+        private InputStream file;
 
         /**
-         * Create an upload file.
+         * Create an upload file from a File object.
          *
          * @param name     the file name.
          * @param mimeType the mime type.
          * @param file     the File object to read from.
+         * @throws SimbaException if the file cannot be found.
          */
-        public UploadFile(String name, String mimeType, File file) {
+        public UploadFile(String name, String mimeType, File file) throws SimbaException {
+            this.name = name;
+            this.mimeType = mimeType;
+            try {
+                this.file = new FileInputStream(file);
+            } catch (FileNotFoundException e) {
+                throw new SimbaException("Could not find file " + file.getAbsolutePath(),
+                    SimbaException.SimbaError.FILE_ERROR, e);
+            }
+        }
+
+        /**
+         * Create an upload file from a File object with a default mime type of
+         * application/octet-stream
+         * 
+         * @param name the file name.
+         * @param file the File object to read from.
+         * @throws SimbaException if the file cannot be found.
+         */
+        public UploadFile(String name, File file) throws SimbaException {
+            this(name, "application/octet-stream", file);
+        }
+
+        /**
+         * Create an upload file from an input stream.
+         *
+         * @param name     the file name.
+         * @param mimeType the mime type.
+         * @param file     the input stream object to read from.
+         */
+        public UploadFile(String name, String mimeType, InputStream file) {
             this.name = name;
             this.mimeType = mimeType;
             this.file = file;
         }
 
-        public UploadFile(String name, File file) {
+        /**
+         * Create an upload file from an input stream with a default mime type of
+         * application/octet-stream
+         *
+         * @param name the file name.
+         * @param file the input stream object to read from.
+         */
+        public UploadFile(String name, InputStream file) {
+            this(name, "application/octet-stream", file);
+        }
+
+        /**
+         * Create an upload file from a byte array.
+         *
+         * @param name     the file name.
+         * @param mimeType the mime type.
+         * @param file     the byte array to read from.
+         */
+        public UploadFile(String name, String mimeType, byte[] file) {
+            this.name = name;
+            this.mimeType = mimeType;
+            this.file = new ByteArrayInputStream(file);
+        }
+
+        /**
+         * Create an upload file from a byte array with a default mime type of
+         * application/octet-stream
+         *
+         * @param name the file name.
+         * @param file the byte array to read from.
+         */
+        public UploadFile(String name, byte[] file) {
+            this(name, "application/octet-stream", file);
+        }
+
+        /**
+         * Create an upload file from a File path.
+         *
+         * @param name     the file name.
+         * @param mimeType the mime type.
+         * @param file     the file path to read from.
+         * @throws SimbaException if the file cannot be found.
+         */
+        public UploadFile(String name, String mimeType, String file) throws SimbaException {
+            this(name, mimeType, new File(file));
+        }
+
+        /**
+         * Create an upload file from a File path with a default mime type of
+         * application/octet-stream
+         *
+         * @param name the file name.
+         * @param file the file path to read from.
+         * @throws SimbaException if the file cannot be found.
+         */
+        public UploadFile(String name, String file) throws SimbaException {
             this(name, "application/octet-stream", file);
         }
 
@@ -346,7 +526,7 @@ public abstract class Simba<C extends SimbaConfig> {
             return mimeType;
         }
 
-        public File getFile() {
+        public InputStream getFile() {
             return file;
         }
 
@@ -361,7 +541,7 @@ public abstract class Simba<C extends SimbaConfig> {
               .append('\'');
             if (file != null) {
                 sb.append(", file=")
-                  .append(file.getAbsolutePath());
+                  .append(file);
                 sb.append('}');
             }
             return sb.toString();
@@ -759,5 +939,13 @@ public abstract class Simba<C extends SimbaConfig> {
         }
         return ex;
     }
-
+    
+    private Future<Transaction> submit(String txnId, long interval, int totalSeconds, Transaction.State state) {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        Future<Transaction> txn = executor.submit(
+            new TransactionCallable(txnId, interval, totalSeconds, state));
+        executor.shutdown();
+        return txn;
+        
+    }
 }

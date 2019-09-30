@@ -30,7 +30,7 @@ package com.simbachain.simba;
  * 
  * Additionally the response may contain a state attribute and an error string. 
  */
-public class MethodResponse {
+public class CallResponse {
 
     private String requestIdentitier;
     
@@ -38,7 +38,7 @@ public class MethodResponse {
     
     private String error;
 
-    public MethodResponse(String requestIdentitier) {
+    public CallResponse(String requestIdentitier) {
         this.requestIdentitier = requestIdentitier;
     }
 
@@ -64,7 +64,7 @@ public class MethodResponse {
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("MethodResponse{");
+        final StringBuilder sb = new StringBuilder("CallResponse{");
         sb.append("requestIdentitier='")
           .append(requestIdentitier)
           .append('\'');

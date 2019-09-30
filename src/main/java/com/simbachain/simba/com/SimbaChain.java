@@ -31,11 +31,11 @@ import java.util.Map;
 
 import com.simbachain.SimbaException;
 import com.simbachain.simba.Balance;
+import com.simbachain.simba.CallResponse;
 import com.simbachain.simba.Funds;
 import com.simbachain.simba.JsonData;
 import com.simbachain.simba.Manifest;
 import com.simbachain.simba.Method;
-import com.simbachain.simba.MethodResponse;
 import com.simbachain.simba.PagedResult;
 import com.simbachain.simba.Query;
 import com.simbachain.simba.Simba;
@@ -121,11 +121,11 @@ public class SimbaChain extends Simba<SimbaChainConfig> {
      * @param method     The method name
      * @param parameters the parameters
      * @param files      files to upload with the request
-     * @return a MethodResponse object containing the unique ID of the call.
+     * @return a CallResponse object containing the unique ID of the call.
      * @throws SimbaException if an error occurs
      */
     @Override
-    public MethodResponse callMethod(String method, JsonData parameters, UploadFile... files)
+    public CallResponse callMethod(String method, JsonData parameters, UploadFile... files)
         throws SimbaException {
         if (log.isDebugEnabled()) {
             Object f = files.length == 0 ? "" : Arrays.asList(files);
@@ -173,7 +173,7 @@ public class SimbaChain extends Simba<SimbaChainConfig> {
             String.format("%s%s%s/transaction/%s/", getEndpoint(), getvPath(), getContract(),
                 txnId), JsonData.with("payload", signed), stringResponseHandler());
 
-        MethodResponse mr = new MethodResponse(txnId);
+        CallResponse mr = new CallResponse(txnId);
         if (log.isDebugEnabled()) {
             log.debug("EXIT: SimbaChain.callMethod: returning " + mr);
         }

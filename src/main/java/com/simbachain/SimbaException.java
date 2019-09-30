@@ -52,7 +52,8 @@ public class SimbaException extends IOException {
         WALLET_EXISTS,
         MESSAGE_ERROR,
         HTTP_ERROR,
-        AUTHENTICATION_ERROR
+        AUTHENTICATION_ERROR,
+        FILE_ERROR
     }
 
     public SimbaException(String message, SimbaError type) {
