@@ -7,7 +7,6 @@ JavaDocs are available <a href="./api-doc/index.html" target="_blank">here</a>
 
 ## Getting Started
 
-<!---
 
 To use LibSimba4J include it as a dependency. For Maven builds add the following dependency
 to your pom file:
@@ -32,9 +31,7 @@ dependencies {
 }
 ```
 
--->
-
-LibSimba4J builds with maven. You will need to have maven 3.* installed. Once you have maven,
+To build from source, LibSimba4J builds with maven. You will need to have maven 3.* installed. Once you have maven,
 cd into the top level directory and type:
 
 ```shell
