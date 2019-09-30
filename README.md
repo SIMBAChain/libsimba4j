@@ -10,7 +10,7 @@
 
 > libsimba4j is a library simplifying the use of SIMBAChain APIs. We aim to abstract away the various blockchain concepts, reducing the necessary time needed to get to working code.
 
-### [🏠 Homepage](https://github.com/simbachain/libsimba4js#readme)
+### [🏠 Homepage](https://github.com/simbachain/libsimba4j#readme)
 ### [📝 Documentation](https://simbachain.github.io/libsimba4j/)
 
 ## Contributing
