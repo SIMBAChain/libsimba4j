@@ -120,7 +120,9 @@ public class AsyncSimbaChain extends SimbaChain {
                         Thread.sleep(poll);
                         now = System.currentTimeMillis();
                     }
-                    handler.handleResponse(txn);
+                    if(txn != null) {
+                        handler.handleResponse(txn);
+                    }
                 } catch (Exception e) {
                     if (e instanceof SimbaException) {
                         handler.handleTransactionError((SimbaException) e);
