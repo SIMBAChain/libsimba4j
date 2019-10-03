@@ -24,6 +24,7 @@ package com.simbachain.simba.com;
 
 import java.io.OutputStream;
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -81,11 +82,11 @@ public class SimbaChain extends Simba<SimbaChainConfig> {
         SigningConfirmation signingConfirmation) {
         super(endpoint, contract, config);
         this.wallet = config.getWallet();
-        this.apiHeaders.put("APIKEY", this.getCredentials()
+        this.apiHeaders.put("APIKEY", this.getConfig()
                                           .getApiKey());
-        if (this.getCredentials()
+        if (this.getConfig()
                 .getManagementKey() != null) {
-            this.managementHeaders.put("APIKEY", this.getCredentials()
+            this.managementHeaders.put("APIKEY", this.getConfig()
                                                      .getManagementKey());
         }
         this.signingConfirmation = signingConfirmation;
@@ -127,57 +128,7 @@ public class SimbaChain extends Simba<SimbaChainConfig> {
     @Override
     public CallResponse callMethod(String method, JsonData parameters, UploadFile... files)
         throws SimbaException {
-        if (log.isDebugEnabled()) {
-            Object f = files.length == 0 ? "" : Arrays.asList(files);
-            log.debug("ENTER: SimbaChain.callMethod: "
-                + "method = ["
-                + method
-                + "], parameters = ["
-                + parameters
-                + "], files = ["
-                + f
-                + "]");
-        }
-
-        if (this.wallet == null) {
-            throw new SimbaException("No Wallet found", SimbaException.SimbaError.WALLET_NOT_FOUND);
-        }
-        validateParameters(method, parameters, files.length > 0);
-        parameters.and("from", this.wallet.getAddress());
-        String txnId = null;
-
-        String endpoint = String.format("%s%s%s/%s/", getEndpoint(), getvPath(), getContract(),
-            method);
-        SigningTransaction response = this.post(endpoint, parameters,
-            jsonResponseHandler(SigningTransaction.class), files);
-        if (!getSigningConfirmation().confirm(response)) {
-            throw new SimbaException(response.toString(), SimbaException.SimbaError.SIGN_REJECTED);
-        }
-        txnId = response.getId();
-        Payload payload = response.getPayload();
-        Raw raw = payload.getRaw();
-
-        String nonce = raw.getNonce();
-        String gasPrice = raw.getGasPrice();
-        String gasLimit = raw.getGasLimit();
-        BigInteger value = raw.getValue() == null ? BigInteger.ZERO
-            : Numeric.toBigInt(raw.getValue());
-        String to = raw.getTo();
-        String data = raw.getData();
-
-        RawTransaction rt = RawTransaction.createTransaction(Numeric.toBigInt(nonce),
-            Numeric.toBigInt(gasPrice), new BigInteger(gasLimit), to, value, data);
-        String signed = this.wallet.sign(rt);
-
-        String signedResponse = this.post(
-            String.format("%s%s%s/transaction/%s/", getEndpoint(), getvPath(), getContract(),
-                txnId), JsonData.with("payload", signed), stringResponseHandler());
-
-        CallResponse mr = new CallResponse(txnId);
-        if (log.isDebugEnabled()) {
-            log.debug("EXIT: SimbaChain.callMethod: returning " + mr);
-        }
-        return mr;
+        return callMethod(3, null, method, parameters, files);
     }
 
     /**
@@ -391,7 +342,7 @@ public class SimbaChain extends Simba<SimbaChainConfig> {
     }
 
     /**
-     * Get the next paged result is available.
+     * Get the next paged result if available.
      *
      * @param results the current paged result.
      * @return a new paged result from calling getNext() or null if there is no next URL.
@@ -407,21 +358,13 @@ public class SimbaChain extends Simba<SimbaChainConfig> {
         result.setCount(page.getCount());
         result.setNext(page.getNext());
         result.setPrevious(page.getPrevious());
-        List<FullTransaction> txs = page.getResults();
-        for (FullTransaction tx : txs) {
-            tx.setApp(getContract());
-            if (tx.getMethod() != null) {
-                Method m = getMetadata().getMethods()
-                                        .get(tx.getMethod());
-                tx.setMethodParameters(m.getParameters());
-            }
-        }
-        result.setResults(txs);
+        List<FullTransaction> txns = page.getResults();
+        result.setResults(populate(txns));
         return result;
     }
 
     /**
-     * Get the previous paged result is available.
+     * Get the previous paged result if available.
      *
      * @param results the current paged result.
      * @return a new paged result from calling getPrevious() or null if there is no previous URL.
@@ -437,16 +380,8 @@ public class SimbaChain extends Simba<SimbaChainConfig> {
         result.setCount(page.getCount());
         result.setNext(page.getNext());
         result.setPrevious(page.getPrevious());
-        List<FullTransaction> txs = page.getResults();
-        for (FullTransaction tx : txs) {
-            tx.setApp(getContract());
-            if (tx.getMethod() != null) {
-                Method m = getMetadata().getMethods()
-                                        .get(tx.getMethod());
-                tx.setMethodParameters(m.getParameters());
-            }
-        }
-        result.setResults(txs);
+        List<FullTransaction> txns = page.getResults();
+        result.setResults(populate(txns));
         return result;
     }
 
@@ -579,6 +514,95 @@ public class SimbaChain extends Simba<SimbaChainConfig> {
      */
     public SigningConfirmation getSigningConfirmation() {
         return signingConfirmation;
+    }
+
+    private List<FullTransaction> populate(List<FullTransaction> txns) {
+        List<FullTransaction> populated = new ArrayList<>();
+        for (FullTransaction tx : txns) {
+            tx.setApp(getContract());
+            if (tx.getMethod() != null) {
+                Method m = getMetadata().getMethods()
+                                        .get(tx.getMethod());
+                tx.setMethodParameters(m.getParameters());
+            }
+            populated.add(tx);
+        }
+        return populated;
+    }
+
+    private CallResponse callMethod(int attempt,
+        String suggestedNonce,
+        String method,
+        JsonData parameters,
+        UploadFile... files) throws SimbaException {
+        if (log.isDebugEnabled()) {
+            Object f = files.length == 0 ? "" : Arrays.asList(files);
+            log.debug("ENTER: SimbaChain.callMethod: "
+                + "attempt = ["
+                + attempt
+                + "], suggestedNonce = ["
+                + suggestedNonce
+                + "], method = ["
+                + method
+                + "], parameters = ["
+                + parameters
+                + "], files = ["
+                + f
+                + "]");
+        }
+
+        if (this.wallet == null) {
+            throw new SimbaException("No Wallet found", SimbaException.SimbaError.WALLET_NOT_FOUND);
+        }
+        validateParameters(method, parameters, files.length > 0);
+        JsonData realParams = parameters.copy();
+        realParams.and("from", this.wallet.getAddress());
+        String txnId = null;
+
+        String endpoint = String.format("%s%s%s/%s/", getEndpoint(), getvPath(), getContract(),
+            method);
+        SigningTransaction response = this.post(endpoint, realParams,
+            jsonResponseHandler(SigningTransaction.class), files);
+        if (!getSigningConfirmation().confirm(response)) {
+            throw new SimbaException(response.toString(), SimbaException.SimbaError.SIGN_REJECTED);
+        }
+        txnId = response.getId();
+        Payload payload = response.getPayload();
+        Raw raw = payload.getRaw();
+
+        String nonce = suggestedNonce != null ? suggestedNonce: raw.getNonce();
+        String gasPrice = raw.getGasPrice();
+        String gasLimit = raw.getGasLimit();
+        BigInteger value = raw.getValue() == null ? BigInteger.ZERO
+            : Numeric.toBigInt(raw.getValue());
+        String to = raw.getTo();
+        String data = raw.getData();
+
+        RawTransaction rt = RawTransaction.createTransaction(Numeric.toBigInt(nonce),
+            Numeric.toBigInt(gasPrice), new BigInteger(gasLimit), to, value, data);
+        String signed = this.wallet.sign(rt);
+
+        try {
+            String signedResponse = this.post(
+                String.format("%s%s%s/transaction/%s/", getEndpoint(), getvPath(), getContract(),
+                    txnId), JsonData.with("payload", signed), stringResponseHandler());
+            CallResponse mr = new CallResponse(txnId);
+            if (log.isDebugEnabled()) {
+                log.debug("EXIT: SimbaChain.callMethod: returning " + mr);
+            }
+            return mr;
+        } catch (SimbaException e) {
+            if (e.getType() == SimbaException.SimbaError.TRANSACTION_ERROR && attempt > 0) {
+                String suggested = null;
+                Object suggestion = e.getProperty("suggested_nonce");
+                if(suggestion != null) {
+                    suggested = suggestion.toString();
+                }
+                return callMethod(attempt - 1, suggested, method, parameters, files);
+            } else {
+                throw e;
+            }
+        }
     }
 
 }

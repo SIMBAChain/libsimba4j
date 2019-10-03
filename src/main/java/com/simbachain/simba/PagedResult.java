@@ -24,8 +24,6 @@ package com.simbachain.simba;
 
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 /**
  *  This class encapsulates paged results. It contains a total count of results
  *  as well as a next and previous URL. 
@@ -38,13 +36,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 public class PagedResult<R> {
     
-    @JsonProperty
+    private String method = null;
     private int count;
-    @JsonProperty
     private String next;
-    @JsonProperty
     private String previous;
-    @JsonProperty
     private List<? extends R> results;
     
 
@@ -79,8 +74,15 @@ public class PagedResult<R> {
     public void setResults(List<? extends R> results) {
         this.results = results;
     }
-    
-    
+
+    public String getMethod() {
+        return method;
+    }
+
+    public void setMethod(String method) {
+        this.method = method;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("PagedResult{");

@@ -35,6 +35,10 @@ public class JsonData {
 
     private JsonData() {
     }
+
+    private JsonData(Map<String, Object> map) {
+        this.map.putAll(map);
+    }
     
     public static JsonData with(String key, String value) {
         return new JsonData().and(key, value);
@@ -83,6 +87,10 @@ public class JsonData {
             }
         }
         return ret;
+    }
+    
+    public JsonData copy() {
+        return new JsonData(this.map);
     }
     
     public Set<String> keys() {

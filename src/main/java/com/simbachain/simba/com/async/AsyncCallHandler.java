@@ -20,56 +20,40 @@
  * SOFTWARE.
  */
 
-package com.simbachain.simba.com;
+package com.simbachain.simba.com.async;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.simbachain.SimbaException;
+import com.simbachain.simba.Transaction;
 
 /**
- *
+ * Handler for asynchronous execution.
+ * These methods are called from a separate thread when a transaction
+ * reaches a specified state or an error occurs.
+ * 
+ * handleTransactionError is typically an error thrown by the Simba server,
+ * emanating from the blockchain itself, or the server.
+ * 
+ * handleExecutionError is typically a runtime exception triggered
+ * by the thread executor itself.
  */
-public class Page {
+public interface AsyncCallHandler {
 
-    @JsonProperty
-    private int count;
-    @JsonProperty
-    private String next;
-    @JsonProperty
-    private String previous;
-    @JsonProperty
-    private List<FullTransaction> results = new ArrayList<>();
+    /**
+     * Handle a successful transaction.
+     * @param transaction the transaction object.
+     */
+    void handleResponse(Transaction transaction);
 
-    public int getCount() {
-        return count;
-    }
+    /**
+     * Handle a transaction error.
+     * @param exception a SimbaException
+     */
+    void handleTransactionError(SimbaException exception);
 
-    public void setCount(int count) {
-        this.count = count;
-    }
+    /**
+     * Handle an execution error.
+     * @param throwable a throwable, most likely a runtime exception.
+     */
+    void handleExecutionError(Throwable throwable);
 
-    public String getNext() {
-        return next;
-    }
-
-    public void setNext(String next) {
-        this.next = next;
-    }
-
-    public String getPrevious() {
-        return previous;
-    }
-
-    public void setPrevious(String previous) {
-        this.previous = previous;
-    }
-
-    public List<FullTransaction> getResults() {
-        return results;
-    }
-
-    public void setResults(List<FullTransaction> results) {
-        this.results = results;
-    }
 }

@@ -24,6 +24,7 @@ package com.simbachain.simba.com;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -47,13 +48,13 @@ public class FullTransaction implements Transaction {
     @JsonProperty
     private Payload payload;
     @JsonProperty
-    private Map<String, Object> receipt;
+    private Map<String, Object> receipt = new HashMap<>();
     @JsonProperty("transaction_hash")
     private String transactionHash;
     @JsonProperty
     private String error;
     @JsonProperty("error_details")
-    private List<Object> errorDetails;
+    private List<Object> errorDetails = new ArrayList<>();
     @JsonProperty
     private String status;
     @JsonProperty
@@ -120,16 +121,30 @@ public class FullTransaction implements Transaction {
     @Override
     public State getState() {
         String status = getStatus();
-        if (status != null && status.equals("DEPLOYED")) {
-            return State.COMPLETED;
+        if(status == null) {
+            return State.FAILED; 
         }
-        if (getError() != null) {
-            return State.FAILED;
-        } else if (getReceipt() == null) {
-            return State.INITIALIZED;
-        } else {
-            return State.COMPLETED;
+        switch (status.toUpperCase()) {
+            case "DEPLOYED":
+                return State.COMPLETED;
+            case "ERRORED":
+                return State.FAILED;
+            case "PENDING":
+                return State.INITIALIZED;
+            case "SUBMITTED":
+                return State.SUBMITTED;
+            default:
+                return State.FAILED;
         }
+    }
+
+    @Override
+    public String getBundleHash() {
+        Map<String, Object> inputs = getInputs();
+        if(inputs != null) {
+            return (String) inputs.get("_bundleHash");
+        }
+        return null;
     }
 
     @Override

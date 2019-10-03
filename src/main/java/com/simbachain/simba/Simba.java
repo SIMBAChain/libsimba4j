@@ -26,6 +26,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
@@ -38,6 +39,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.simbachain.SimbaException;
 import org.apache.http.HttpEntity;
@@ -67,7 +69,7 @@ public abstract class Simba<C extends SimbaConfig> {
     protected ObjectMapper mapper = new ObjectMapper();
     protected CloseableHttpClient client;
     protected AppMetadata metadata = new AppMetadata();
-    private C credentials;
+    private C config;
     protected Logger log = LoggerFactory.getLogger(getClass().getName());
 
     /**
@@ -75,16 +77,16 @@ public abstract class Simba<C extends SimbaConfig> {
      *
      * @param endpoint    the URL of a particular contract API, e.g. https://api.simbachain.com/
      * @param contract    the name of the contract or the appname, e.g. mycontract
-     * @param credentials used by subclasses.
+     * @param config used by subclasses.
      */
-    public Simba(String endpoint, String contract, C credentials) {
+    public Simba(String endpoint, String contract, C config) {
         if (!endpoint.endsWith("/")) {
             endpoint += "/";
         }
         this.endpoint = endpoint;
         this.contract = contract;
         this.client = createClient();
-        this.credentials = credentials;
+        this.config = config;
     }
 
     /**
@@ -114,8 +116,8 @@ public abstract class Simba<C extends SimbaConfig> {
         return metadata;
     }
 
-    public C getCredentials() {
-        return credentials;
+    public C getConfig() {
+        return config;
     }
 
     /**
@@ -178,9 +180,8 @@ public abstract class Simba<C extends SimbaConfig> {
      * @return a CallResponse object containing the unique ID of the call.
      * @throws SimbaException if an error occurs
      */
-    public abstract CallResponse callMethod(String method,
-        JsonData parameters,
-        UploadFile... files) throws SimbaException;
+    public abstract CallResponse callMethod(String method, JsonData parameters, UploadFile... files)
+        throws SimbaException;
 
     /**
      * Get the metadata JSON file for a bundle as a string.
@@ -320,9 +321,10 @@ public abstract class Simba<C extends SimbaConfig> {
     public abstract Balance getBalance() throws SimbaException;
 
     /**
-     * Wait for a transaction to reach COMPLETED stage.  
-     * @param txnId The transaction or requiest ID.
-     * @param interval Interval to poll the server.
+     * Wait for a transaction to reach COMPLETED stage.
+     *
+     * @param txnId        The transaction or requiest ID.
+     * @param interval     Interval to poll the server.
      * @param totalSeconds Total time to wait.
      * @return a Future object that returns a Transaction.
      * @throws SimbaException if something goes wrong.
@@ -337,7 +339,7 @@ public abstract class Simba<C extends SimbaConfig> {
      * Wait for a transaction to reach COMPLETED stage. Polling interval is set to 1 second
      * and total wait time is set to 10 seconds.
      *
-     * @param txnId        The transaction or requiest ID.
+     * @param txnId The transaction or requiest ID.
      * @return a Future object that returns a Transaction.
      * @throws SimbaException if something goes wrong.
      */
@@ -372,6 +374,33 @@ public abstract class Simba<C extends SimbaConfig> {
         return submit(txnId, 1000, 10, Transaction.State.INITIALIZED);
     }
 
+    /**
+     * Wait for a transaction to reach SUBMITTED stage.
+     *
+     * @param txnId        The transaction or requiest ID.
+     * @param interval     Interval to poll the server.
+     * @param totalSeconds Total time to wait.
+     * @return a Future object that returns a Transaction.
+     * @throws SimbaException if something goes wrong.
+     */
+    public Future<Transaction> waitForTransactionSubmitted(String txnId,
+        long interval,
+        int totalSeconds) throws SimbaException {
+        return submit(txnId, interval, totalSeconds, Transaction.State.SUBMITTED);
+    }
+
+    /**
+     * Wait for a transaction to reach SUBMITTED stage. Polling interval is set to 1 second
+     * and total wait time is set to 10 seconds.
+     *
+     * @param txnId The transaction or requiest ID.
+     * @return a Future object that returns a Transaction.
+     * @throws SimbaException if something goes wrong.
+     */
+    public Future<Transaction> waitForTransactionSubmitted(String txnId) throws SimbaException {
+        return submit(txnId, 1000, 10, Transaction.State.SUBMITTED);
+    }
+
     private class TransactionCallable implements Callable<Transaction> {
 
         private String txnId;
@@ -396,7 +425,7 @@ public abstract class Simba<C extends SimbaConfig> {
             long end = now + (totalSeconds * 1000);
             while (now < end) {
                 txn = getTransaction(txnId);
-                if (txn.getState() == state) {
+                if (txn != null && txn.getState() == state) {
                     return txn;
                 }
                 Thread.sleep(poll);
@@ -437,7 +466,7 @@ public abstract class Simba<C extends SimbaConfig> {
         /**
          * Create an upload file from a File object with a default mime type of
          * application/octet-stream
-         * 
+         *
          * @param name the file name.
          * @param file the File object to read from.
          * @throws SimbaException if the file cannot be found.
@@ -644,11 +673,13 @@ public abstract class Simba<C extends SimbaConfig> {
         return HttpClients.createDefault();
     }
 
-    private String createExceptionMessage(String mime, String reason, String body) {
+    private IOException createException(String mime, int status, String reason, String body) {
         if (log.isDebugEnabled()) {
-            log.debug("ENTER: Simba.createExceptionMessage: "
+            log.debug("ENTER: Simba.createException: "
                 + "mime = ["
                 + mime
+                + "], status = ["
+                + status
                 + "], reason = ["
                 + reason
                 + "], body = ["
@@ -657,19 +688,35 @@ public abstract class Simba<C extends SimbaConfig> {
         }
 
         if (mime.equals("text/html")) {
-            return reason;
+            return new HttpResponseException(status, reason);
         } else if (mime.contains("text")) {
-            return body;
+            return new HttpResponseException(status, body);
         } else if (mime.equals("application/json") || mime.equals("application/vnd.api+json")) {
             try {
                 Map<?, ?> map = mapper.readValue(body, Map.class);
                 Object err = map.get("error");
                 if (err != null) {
-                    return err.toString();
+                    String errCode = null;
+                    Object code = map.get("error_code");
+                    if (code != null) {
+                        errCode = code.toString();
+                    }
+                    if(errCode != null) {
+                        SimbaException.SimbaError errorEnum = mapErrorCode(errCode);
+                        SimbaException ex = new SimbaException(err.toString(), errorEnum);
+                        Object extras = map.get("extra_detail");
+                        if(extras != null && extras instanceof Map) {
+                            Map<String, Object> mp = (Map<String, Object>) extras;
+                            ex.setProperties(mp);
+                        }
+                        ex.setHttpStatus(status);
+                        return ex;
+                    }
+                    return new HttpResponseException(status, err.toString());
                 }
                 err = map.get("detail");
                 if (err != null) {
-                    return err.toString();
+                    return new HttpResponseException(status, err.toString());
                 }
                 err = map.get("errors");
                 if (err != null && err instanceof Collection) {
@@ -692,14 +739,26 @@ public abstract class Simba<C extends SimbaConfig> {
                         }
                         sb.append("\n");
                     }
-                    return sb.toString();
+                    return new HttpResponseException(status, sb.toString());
                 }
 
             } catch (Exception e) {
-                return body;
+                return new HttpResponseException(status, body);
             }
         }
-        return body;
+        return new HttpResponseException(status, body);
+    }
+    
+    private SimbaException.SimbaError mapErrorCode(String code) {
+        if(code == null || code.trim().length() == 0) {
+            return SimbaException.SimbaError.HTTP_ERROR;
+        }
+        switch (code) {
+            case "15001":
+                return SimbaException.SimbaError.TRANSACTION_ERROR;
+            default:
+                return SimbaException.SimbaError.HTTP_ERROR;
+        }
     }
 
     /**
@@ -726,8 +785,7 @@ public abstract class Simba<C extends SimbaConfig> {
             if (status >= 200 && status < 300) {
                 return responseString;
             } else {
-                throw new HttpResponseException(status,
-                    createExceptionMessage(mime, reason, responseString));
+                throw createException(mime, status, reason, responseString);
             }
         };
     }
@@ -756,8 +814,35 @@ public abstract class Simba<C extends SimbaConfig> {
             if (status >= 200 && status < 300) {
                 return mapper.readValue(responseString, cls);
             } else {
-                throw new HttpResponseException(status,
-                    createExceptionMessage(mime, reason, responseString));
+                throw createException(mime, status, reason, responseString);
+            }
+        };
+    }
+
+    /**
+     * Create a response handler for JSON that tries to deserialize to the given class.
+     *
+     * @param tf the type reference
+     * @return ResponseHandler that returns an instance of the requested class
+     */
+    protected <C> ResponseHandler<C> jsonResponseHandler(final TypeReference<C> tf) {
+        return response -> {
+            int status = response.getStatusLine()
+                                 .getStatusCode();
+            String reason = response.getStatusLine()
+                                    .getReasonPhrase();
+            String mime = "text/plain";
+            String responseString = "";
+            HttpEntity entity = response.getEntity();
+            if (entity != null) {
+                ContentType contentType = ContentType.getOrDefault(entity);
+                mime = contentType.getMimeType();
+                responseString = EntityUtils.toString(entity);
+            }
+            if (status >= 200 && status < 300) {
+                return mapper.readValue(responseString, tf);
+            } else {
+                throw createException(mime, status, reason, responseString);
             }
         };
     }
@@ -808,7 +893,7 @@ public abstract class Simba<C extends SimbaConfig> {
                                             .getReasonPhrase();
                     ContentType contentType = ContentType.getOrDefault(entity);
                     String mime = contentType.getMimeType();
-                    errorResponse = createExceptionMessage(mime, reason, errorResponse);
+                    throw createException(mime, status, reason, errorResponse);
                 }
                 throw new HttpResponseException(status, errorResponse);
             }

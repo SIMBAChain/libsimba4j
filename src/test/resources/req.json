@@ -116,7 +116,8 @@
           "member_id": null,
           "error": null,
           "transaction_hash": null,
-          "error_details": null
+          "error_details": null,
+          "status": "PENDING"
         }
       }
     },

@@ -58,7 +58,7 @@ public interface Transaction {
      * Possible states a transaction can be in.
      */
     public static enum State {
-        INITIALIZED, FAILED, COMPLETED
+        INITIALIZED, SUBMITTED, FAILED, COMPLETED
     }
 
     /**
@@ -109,6 +109,13 @@ public interface Transaction {
      * @return the current state.
      */
     public State getState();
+
+    /**
+     * Get the bundle hash for the transaction. This will be null not matter
+     * what the state if no files were submitted in the transaction.
+     * @return the bundle hash
+     */
+    public String getBundleHash();
 
     /**
      * Get the actual inputs that weere used to create this transaction. 

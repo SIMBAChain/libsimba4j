@@ -41,6 +41,8 @@ public class ManifestFile {
     @JsonProperty
     private String hash;
     @JsonProperty
+    private String digest;
+    @JsonProperty
     private String uid;
     @JsonProperty
     private String alg;
@@ -77,6 +79,14 @@ public class ManifestFile {
         this.hash = hash;
     }
 
+    public String getDigest() {
+        return digest;
+    }
+
+    public void setDigest(String digest) {
+        this.digest = digest;
+    }
+
     public String getUid() {
         return uid;
     }
@@ -106,6 +116,9 @@ public class ManifestFile {
           .append(size);
         sb.append(", hash='")
           .append(hash)
+          .append('\'');
+        sb.append(", digest='")
+          .append(digest)
           .append('\'');
         sb.append(", uid='")
           .append(uid)

@@ -34,6 +34,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class Manifest {
 
     @JsonProperty
+    private String alg;
+    @JsonProperty
+    private String digest;
+    @JsonProperty
+    private String mimetype;
+    @JsonProperty
     private String hash;
     @JsonProperty
     private List<ManifestFile> files = new ArrayList<>();
@@ -45,7 +51,31 @@ public class Manifest {
     public void setHash(String hash) {
         this.hash = hash;
     }
-    
+
+    public String getAlg() {
+        return alg;
+    }
+
+    public void setAlg(String alg) {
+        this.alg = alg;
+    }
+
+    public String getMimetype() {
+        return mimetype;
+    }
+
+    public void setMimetype(String mimetype) {
+        this.mimetype = mimetype;
+    }
+
+    public String getDigest() {
+        return digest;
+    }
+
+    public void setDigest(String digest) {
+        this.digest = digest;
+    }
+
     public List<ManifestFile> getFiles() {
         return files;
     }

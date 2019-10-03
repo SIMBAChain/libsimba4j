@@ -23,6 +23,8 @@
 package com.simbachain;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  *  General Exception class for Simba Errors.
@@ -34,7 +36,7 @@ import java.io.IOException;
 public class SimbaException extends IOException {
 
     private SimbaError type;
-    private int httpStatus;
+    private Map<String, Object> properties = new HashMap<>();
 
     /**
      * Flavours of Wallet Exception
@@ -53,7 +55,9 @@ public class SimbaException extends IOException {
         MESSAGE_ERROR,
         HTTP_ERROR,
         AUTHENTICATION_ERROR,
-        FILE_ERROR
+        FILE_ERROR,
+        TRANSACTION_ERROR,
+        EXECUTION_ERROR
     }
 
     public SimbaException(String message, SimbaError type) {
@@ -84,10 +88,34 @@ public class SimbaException extends IOException {
      * @return The HTTP status code. 
      */
     public int getHttpStatus() {
-        return httpStatus;
+        Object o = properties.get("HTTP_STATUS");
+        if(o != null) {
+            try {
+                return Integer.parseInt(o.toString());
+            } catch (NumberFormatException e) {
+                
+            }
+        }
+        return -1;
     }
 
     public void setHttpStatus(int httpStatus) {
-        this.httpStatus = httpStatus;
+        properties.put("HTTP_STATUS", httpStatus);
+    }
+    
+    public void setProperty(String key, Object value) {
+        properties.put(key, value);
+    }
+    
+    public Object getProperty(String key) {
+        return properties.get(key);
+    }
+    
+    public void setProperties(Map<String, Object> props) {
+        properties.putAll(props);
+    }
+
+    public Map<String, Object> getProperties() {
+        return properties;
     }
 }
