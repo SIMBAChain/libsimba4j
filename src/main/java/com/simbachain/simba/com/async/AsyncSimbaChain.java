@@ -128,7 +128,7 @@ public class AsyncSimbaChain extends SimbaChain {
                         handler.handleTransactionError((SimbaException) e);
                     } else {
                         handler.handleTransactionError(new SimbaException("Error in async call method",
-                            SimbaException.SimbaError.EXECUTION_ERROR));
+                            SimbaException.SimbaError.EXECUTION_ERROR, e));
                     }
                 }
             });
