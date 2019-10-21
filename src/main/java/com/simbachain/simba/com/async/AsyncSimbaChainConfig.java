@@ -28,6 +28,7 @@ import com.simbachain.wallet.Wallet;
 
 /**
  *  A config that supports in-order execution and waiting for transactions.
+ *  
  *  pollInterval sets the polling interval to the server in milliseconds.
  *  The default is 1000.
  *  
@@ -45,9 +46,9 @@ import com.simbachain.wallet.Wallet;
 public class AsyncSimbaChainConfig extends SimbaChainConfig {
     
     private long pollInterval = 1000;
-    private int totalWaitSeconds = 10;
+    private int totalWaitSeconds = 20;
     private int queueSize = 100;
-    private Transaction.State state = Transaction.State.SUBMITTED;
+    private Transaction.State state = Transaction.State.COMPLETED;
 
     public AsyncSimbaChainConfig(String apiKey, Wallet wallet, String managementKey) {
         super(apiKey, wallet, managementKey);
@@ -59,25 +60,27 @@ public class AsyncSimbaChainConfig extends SimbaChainConfig {
 
     public AsyncSimbaChainConfig(String apiKey,
         Wallet wallet,
+        long pollInterval,
+        int totalWaitSeconds,
+        int queueSize,
+        Transaction.State state) {
+        this(apiKey, wallet, null, pollInterval, totalWaitSeconds, queueSize, state);
+    }
+
+    public AsyncSimbaChainConfig(String apiKey,
+        Wallet wallet,
+        Transaction.State state) {
+        this(apiKey, wallet, null, 1000, 10, 100, state);
+    }
+
+    public AsyncSimbaChainConfig(String apiKey,
+        Wallet wallet,
         String managementKey,
         long pollInterval,
         int totalWaitSeconds,
         int queueSize,
         Transaction.State state) {
         super(apiKey, wallet, managementKey);
-        this.pollInterval = pollInterval;
-        this.totalWaitSeconds = totalWaitSeconds;
-        this.queueSize = queueSize;
-        this.state = state;
-    }
-
-    public AsyncSimbaChainConfig(String apiKey,
-        Wallet wallet,
-        long pollInterval,
-        int totalWaitSeconds,
-        int queueSize,
-        Transaction.State state) {
-        super(apiKey, wallet);
         this.pollInterval = pollInterval;
         this.totalWaitSeconds = totalWaitSeconds;
         this.queueSize = queueSize;

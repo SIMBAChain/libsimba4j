@@ -54,6 +54,8 @@ public class SimbaChain extends Simba<SimbaChainConfig> {
     private SigningConfirmation signingConfirmation;
     private Map<String, String> apiHeaders = new HashMap<>();
     private Map<String, String> managementHeaders = new HashMap<>();
+    private int retrySignAttempts;
+    private long retryTransactionSleep;
 
     /**
      * Create a SimbaChain instance
@@ -72,7 +74,7 @@ public class SimbaChain extends Simba<SimbaChainConfig> {
      *
      * @param endpoint            the endpoint of a contract, e.g. https://api.simbachain.com/v1/
      * @param contract            the contract or app name.
-     * @param config              the credentials required to access the endpoint.
+     * @param config              the config e.g., credentials required to access the endpoint.
      * @param signingConfirmation an optional SigningConfirmation instance
      *                            that is queried before a transaction is signed.
      */
@@ -90,6 +92,8 @@ public class SimbaChain extends Simba<SimbaChainConfig> {
                                                      .getManagementKey());
         }
         this.signingConfirmation = signingConfirmation;
+        this.retrySignAttempts = config.getRetrySignAttempts();
+        this.retryTransactionSleep = config.getRetryTransactionSleep();
     }
 
     /**
@@ -128,7 +132,7 @@ public class SimbaChain extends Simba<SimbaChainConfig> {
     @Override
     public CallResponse callMethod(String method, JsonData parameters, UploadFile... files)
         throws SimbaException {
-        return callMethod(3, null, method, parameters, files);
+        return callMethod(this.retrySignAttempts, method, parameters, files);
     }
 
     /**
@@ -531,7 +535,6 @@ public class SimbaChain extends Simba<SimbaChainConfig> {
     }
 
     private CallResponse callMethod(int attempt,
-        String suggestedNonce,
         String method,
         JsonData parameters,
         UploadFile... files) throws SimbaException {
@@ -540,8 +543,6 @@ public class SimbaChain extends Simba<SimbaChainConfig> {
             log.debug("ENTER: SimbaChain.callMethod: "
                 + "attempt = ["
                 + attempt
-                + "], suggestedNonce = ["
-                + suggestedNonce
                 + "], method = ["
                 + method
                 + "], parameters = ["
@@ -557,7 +558,6 @@ public class SimbaChain extends Simba<SimbaChainConfig> {
         validateParameters(method, parameters, files.length > 0);
         JsonData realParams = parameters.copy();
         realParams.and("from", this.wallet.getAddress());
-        String txnId = null;
 
         String endpoint = String.format("%s%s%s/%s/", getEndpoint(), getvPath(), getContract(),
             method);
@@ -566,11 +566,37 @@ public class SimbaChain extends Simba<SimbaChainConfig> {
         if (!getSigningConfirmation().confirm(response)) {
             throw new SimbaException(response.toString(), SimbaException.SimbaError.SIGN_REJECTED);
         }
-        txnId = response.getId();
+        try {
+            return signTransaction(response, null, this.retrySignAttempts);
+        } catch (SimbaException e) {
+            attempt -= 1;
+            if(attempt == 0) {
+                if (log.isDebugEnabled()) {
+                    log.warn("SimbaChain.callMethod throwing exception", e);
+                }
+                throw e;
+            }
+            try {
+                Thread.sleep(this.retryTransactionSleep);
+            } catch (InterruptedException e1) {
+                if(log.isWarnEnabled()) {
+                    log.warn("WARN: SimbaChain.callMethod: Transaction retry sleep was interrupted.");
+                }
+                throw e;
+            }
+            if (log.isDebugEnabled()) {
+                log.debug("EXIT: SimbaChain.callMethod: tryng again with attempts left: " + attempt);
+            }
+            return callMethod(attempt, method, parameters, files);
+        }
+    }
+    
+    private CallResponse signTransaction(SigningTransaction response, String suggestedNonce, int attempt) throws SimbaException {
+        String txnId = response.getId();
         Payload payload = response.getPayload();
         Raw raw = payload.getRaw();
 
-        String nonce = suggestedNonce != null ? suggestedNonce: raw.getNonce();
+        String nonce = suggestedNonce != null ? suggestedNonce : raw.getNonce();
         String gasPrice = raw.getGasPrice();
         String gasLimit = raw.getGasLimit();
         BigInteger value = raw.getValue() == null ? BigInteger.ZERO
@@ -592,14 +618,21 @@ public class SimbaChain extends Simba<SimbaChainConfig> {
             }
             return mr;
         } catch (SimbaException e) {
+            attempt -= 1;
             if (e.getType() == SimbaException.SimbaError.TRANSACTION_ERROR && attempt > 0) {
                 String suggested = null;
                 Object suggestion = e.getProperty("suggested_nonce");
-                if(suggestion != null) {
+                if (suggestion != null) {
                     suggested = suggestion.toString();
                 }
-                return callMethod(attempt - 1, suggested, method, parameters, files);
+                if (log.isDebugEnabled()) {
+                    log.debug("EXIT: SimbaChain.signTransaction: tryng again with attempts left: " + attempt);
+                }
+                return signTransaction(response, suggested, attempt);
             } else {
+                if (log.isDebugEnabled()) {
+                    log.warn("SimbaChain.signTransaction throwing exception", e);
+                }
                 throw e;
             }
         }

@@ -26,16 +26,16 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.simbachain.SimbaException;
+import com.simbachain.simba.Balance;
 import com.simbachain.simba.CallResponse;
-import com.simbachain.simba.SimbaFactory;
+import com.simbachain.simba.Funds;
+import com.simbachain.simba.JsonData;
 import com.simbachain.simba.PagedResult;
 import com.simbachain.simba.Query;
 import com.simbachain.simba.Simba;
+import com.simbachain.simba.SimbaFactory;
 import com.simbachain.simba.Transaction;
 import com.simbachain.simba.com.SimbaChain;
-import com.simbachain.simba.Balance;
-import com.simbachain.simba.Funds;
-import com.simbachain.simba.JsonData;
 import com.simbachain.simba.com.SimbaChainConfig;
 import com.simbachain.simba.test.server.TestServer;
 import com.simbachain.wallet.FileWallet;
@@ -99,6 +99,7 @@ public class SimbaChainTest {
         Set<String> methods = new HashSet<>();
         methods.add("method1");
         methods.add("method2");
+        methods.add("method3");
         assertEquals(simba.getMetadata()
                           .getMethods()
                           .keySet(), methods);
@@ -120,6 +121,30 @@ public class SimbaChainTest {
                                 .and("name", "Foo");
         CallResponse response = simba.callMethod("method1", data);
         assertNotNull(response.getRequestIdentitier());
+    }
+
+    @Test
+    public void testCallWithNonceError() throws SimbaException {
+        CallResponse response = null;
+        SimbaException expected = null;
+        try {
+            Wallet wallet = new FileWallet("target/test-classes/keys", "wallet test");
+            wallet.loadOrCreateWallet("password");
+
+            SimbaChain simba = SimbaFactory.factory()
+                                           .createSimbaChain("http://localhost:8080/", "simbachain",
+                                               new SimbaChainConfig(
+                                                   "04d1729f7144873851a745d2a000039f55c8e3de5aea626a2bcd0055c01ba6fc",
+                                                   wallet));
+
+            JsonData data = JsonData.with("assetId", "1234");
+            response = simba.callMethod("method3", data);
+        } catch (SimbaException e) {
+            expected = e;
+        }
+        assertNotNull(expected);
+        assertEquals(expected.getHttpStatus(), 409);
+        assertEquals(expected.getType(), SimbaException.SimbaError.TRANSACTION_ERROR);
     }
 
     @Test

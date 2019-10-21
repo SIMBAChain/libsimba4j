@@ -79,6 +79,11 @@ public class TestServer {
             ResponseObject resObj = obj.getResponse();
             HttpResponse resp = HttpResponse.response()
                                             .withStatusCode(resObj.getStatusCode());
+            if(resObj.getHeaders() != null) {
+                for (String s : resObj.getHeaders().keySet()) {
+                    resp = resp.withHeader(s, resObj.getHeaders().get(s));
+                }   
+            }
             String responseString = "";
             if (resObj.getBody() != null && !resObj.getBody()
                                                 .isEmpty()) {

@@ -25,6 +25,8 @@ package com.simbachain.simba;
 import com.simbachain.SimbaException;
 import com.simbachain.simba.com.SimbaChain;
 import com.simbachain.simba.com.SimbaChainConfig;
+import com.simbachain.simba.com.async.AsyncSimbaChain;
+import com.simbachain.simba.com.async.AsyncSimbaChainConfig;
 
 /**
  * Factory for creating Simba instances.
@@ -43,7 +45,7 @@ public class SimbaFactory {
 
     /**
      * Create a SIMBA Chain client for simbachain.com
-     * @param endpoint The contract endpoint, e.g. https://api.simbachain.com/v1/ 
+     * @param endpoint The contract host, e.g. https://api.simbachain.com 
      * @param contract The contract or app name.
      * @param config Configuration used for the client.
      * @return an instance of SimbaChain.
@@ -61,6 +63,32 @@ public class SimbaFactory {
                 SimbaException.SimbaError.INVALID_CREDENTIALS);
         }
         SimbaChain simbaChain = new SimbaChain(endpoint, contract, config);
+        simbaChain.init();
+        return simbaChain;
+
+    }
+
+    /**
+     * Create an asynch SIMBA Chain client for simbachain.com
+     *
+     * @param endpoint The contract host, e.g. https://api.simbachain.com
+     * @param contract The contract or app name.
+     * @param config   Configuration used for the client.
+     * @return an instance of AsyncSimbaChain.
+     * @throws SimbaException if something goes wrong.
+     */
+    public AsyncSimbaChain createAsynchSimbaChain(String endpoint, String contract, AsyncSimbaChainConfig config)
+        throws SimbaException {
+
+        if (config.getApiKey() == null) {
+            throw new SimbaException("No API key specified",
+                SimbaException.SimbaError.INVALID_CREDENTIALS);
+        }
+        if (config.getWallet() == null) {
+            throw new SimbaException("No wallet specified",
+                SimbaException.SimbaError.INVALID_CREDENTIALS);
+        }
+        AsyncSimbaChain simbaChain = new AsyncSimbaChain(endpoint, contract, config);
         simbaChain.init();
         return simbaChain;
 

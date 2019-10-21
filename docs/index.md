@@ -15,7 +15,7 @@ to your pom file:
 <dependency>
     <groupId>com.simbachain</groupId>
     <artifactId>libsimba4j</artifactId>
-    <version>0.1.0-alpha</version>
+    <version>0.1.1</version>
 </dependency>
 ```
 
@@ -27,7 +27,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.simbachain:libsimba4j:0.1.0-alpha'
+    implementation 'com.simbachain:libsimba4j:0.1.1'
 }
 ```
 
@@ -296,7 +296,7 @@ All logging is done at a debug level.
 
 ## Example
 
-```
+```java
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.Charset;
 import java.util.List;
@@ -404,6 +404,148 @@ public class SimbaApi {
 ```
 
 
+
+The simbachain.com client also exposes an asynchronous API. This is useful because it allows
+client code not to block while waiting for transactions to complete.
+
+The `AsyncSimbaChain` class accepts a callback that is
+invoked from a separate execution thread with the results of a transaction. The asynch client
+takes an implementation of the `AsyncCallHandler` interface. The handler gets called when a transaction
+has reached a specified state, or the wait threshold has been exceeded, in which case the handler
+is called no matter what the state of the transaction.
+
+The execution thread pool is single threaded, meaning transactions are queued. This reduces
+potential issues with concurrency and client side signing that can happen when the nonce
+(number used once) in the signed transactions get out of synch on the blockchain causing failed
+transactions.
+
+The `asyncCallMethod` is used for this. The method signature is the same as the `callMethod` method
+except the first argument is the handler that should receive notification.
+
+
+
+
+```java
+/**
+ * Handler for asynchronous execution.
+ * These methods are called from a separate thread when a transaction
+ * reaches a specified state or an error occurs.
+ * 
+ * handleTransactionError is typically an error thrown by the Simba server,
+ * emanating from the blockchain itself, or the server.
+ * 
+ * handleExecutionError is typically a runtime exception triggered
+ * by the thread executor itself.
+ */
+public interface AsyncCallHandler {
+
+    /**
+     * Handle a successful transaction.
+     * @param transaction the transaction object.
+     */
+    void handleResponse(Transaction transaction);
+
+    /**
+     * Handle a transaction error.
+     * @param exception a SimbaException
+     */
+    void handleTransactionError(SimbaException exception);
+
+    /**
+     * Handle an execution error.
+     * @param throwable a throwable, most likely a runtime exception.
+     */
+    void handleExecutionError(Throwable throwable);
+}
+```
+
+The `AsyncSimbaChainConfig` class is expected as the configuration and can be used to tune
+wait time and expected state of transactions.
+
+The `pollInterval` attribute sets the polling interval to the server in milliseconds.
+The default value is 1000.
+
+The `totalWaitSeconds` attribute is the maximum time in seconds that polling should take place for.
+If the tranasction has not reached the desired state by then, it is returned anyway. The
+default value is 10 seconds.
+
+
+Example code is below:
+ 
+```java
+ import java.nio.charset.Charset;
+ 
+ import com.simbachain.SimbaException;
+ import com.simbachain.simba.JsonData;
+ import com.simbachain.simba.Simba;
+ import com.simbachain.simba.Transaction;
+ import com.simbachain.simba.com.async.AsyncCallHandler;
+ import com.simbachain.simba.com.async.AsyncSimbaChain;
+ import com.simbachain.simba.com.async.AsyncSimbaChainConfig;
+ import com.simbachain.wallet.FileWallet;
+ import com.simbachain.wallet.Wallet;
+ 
+ /**
+  *  Simple example that runs through most of the Simba API.
+  */
+ public class SimbaAsyncApi {
+ 
+     
+     public static void main(String[] args) throws Exception {
+         
+         AsyncCallHandler handler = new Handler();
+         // Create a wallet
+         Wallet wallet = new FileWallet("./keys", "wallet test");
+         wallet.loadOrCreateWallet("password");
+ 
+         // Instantiate Simba
+         AsyncSimbaChain simba = SimbaFactory.factory().createAsynchSimbaChain("https://api.simbachain.com",
+                                                    "libSimba-SimbaChat-Quorum", new AsyncSimbaChainConfig(
+                                                        "04d1729f7144873851a745d2ae85639f55c8e3de5aea626a2bcd0055c01ba6fc",
+                                                        wallet, Transaction.State.SUBMITTED));
+ 
+         // Call a method
+         JsonData data = JsonData.with("assetId", "room101")
+                                 .and("name", "A Java Room")
+                                 .and("createdBy", "Andrew");
+         simba.asyncCallMethod(handler, "createRoom", data);
+ 
+         // Call a method with an upload file, here created as a string.
+         String s = "hello there Java Room!";
+         JsonData data1 = JsonData.with("assetId", "room101")
+                                  .and("chatRoom", "A Java Room")
+                                  .and("message", "See attached")
+                                  .and("sentBy", "Kieran");
+ 
+         simba.asyncCallMethod(handler, "sendMessage", data1,
+             new Simba.UploadFile("my_file", "text/plain", s.getBytes(Charset.forName("UTF-8"))));
+         
+         simba.shutdown();
+         
+     }
+     
+     private static class Handler implements AsyncCallHandler {
+ 
+         @Override
+         public void handleResponse(Transaction transaction) {
+             System.out.println("HANDLE RESPONSE");
+             System.out.println(transaction.getState());
+         }
+ 
+         @Override
+         public void handleTransactionError(SimbaException exception) {
+             System.out.println("HANDLE TRANSACTION ERROR");
+             exception.printStackTrace();
+         }
+ 
+         @Override
+         public void handleExecutionError(Throwable throwable) {
+             System.out.println("HANDLE EXECUTION ERROR");
+             throwable.printStackTrace();
+         }
+     }
+ }
+```
 
 
 

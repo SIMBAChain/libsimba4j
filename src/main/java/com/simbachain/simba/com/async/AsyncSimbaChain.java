@@ -22,6 +22,7 @@
 
 package com.simbachain.simba.com.async;
 
+import java.util.Arrays;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
@@ -36,13 +37,13 @@ import com.simbachain.simba.com.SigningConfirmation;
 import com.simbachain.simba.com.SimbaChain;
 
 /**
- *  A Simba class that controls how transactions are submitted to simbachain
- *  in order to reduce the possibility of out-of-order nonces.
- *  
- *  Methods are placed into a queue and executed in order. Each execution runs in a separate
- *  single execution thread and waits for a transaction to reach a specified state
- *  before the next transaction is executed. On completion or failure, the AsyncCallHandler
- *  is invoked from the execution thread.
+ * A Simba class that controls how transactions are submitted to simbachain
+ * in order to reduce the possibility of out-of-order nonces.
+ * <p>
+ * Methods are placed into a queue and executed in order. Each execution runs in a separate
+ * single execution thread and waits for a transaction to reach a specified state
+ * before the next transaction is executed. On completion or failure, the AsyncCallHandler
+ * is invoked from the execution thread.
  */
 public class AsyncSimbaChain extends SimbaChain {
 
@@ -54,9 +55,10 @@ public class AsyncSimbaChain extends SimbaChain {
 
     /**
      * Create an async simba instance.
+     *
      * @param endpoint the host endpoint.
      * @param contract the contract or app name.
-     * @param config an AsyncSimbaChainConfig object.
+     * @param config   an AsyncSimbaChainConfig object.
      */
     public AsyncSimbaChain(String endpoint, String contract, AsyncSimbaChainConfig config) {
         this(endpoint, contract, config, new SigningConfirmation() {
@@ -64,11 +66,11 @@ public class AsyncSimbaChain extends SimbaChain {
     }
 
     /**
-     *
      * Create an async simba instance.
-     * @param endpoint the host endpoint.
-     * @param contract the contract or app name.
-     * @param config an AsyncSimbaChainConfig object.
+     *
+     * @param endpoint            the host endpoint.
+     * @param contract            the contract or app name.
+     * @param config              an AsyncSimbaChainConfig object.
      * @param signingConfirmation a signing confirmation instance.
      */
     public AsyncSimbaChain(String endpoint,
@@ -81,28 +83,42 @@ public class AsyncSimbaChain extends SimbaChain {
         this.state = config.getState();
         this.queue = new ArrayBlockingQueue<>(config.getQueueSize());
         this.executor = new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS, queue);
-        
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            public void run() {
-                if (!executor.isShutdown()) {
-                    executor.shutdown();
-                }
-            }
-        });
+
+        Runtime.getRuntime()
+               .addShutdownHook(new Thread() {
+                   public void run() {
+                       if (!executor.isShutdown()) {
+                           executor.shutdown();
+                       }
+                   }
+               });
     }
 
     /**
      * Call a contract method and receive the transaction or an error in the call handler.
-     * 
-     * @param handler an AsyncCallHandler instance.
-     * @param method  the contract method to call.
+     *
+     * @param handler    an AsyncCallHandler instance.
+     * @param method     the contract method to call.
      * @param parameters The method parameters.
-     * @param files zero or more UploadFile objects if the method support file uploads.
+     * @param files      zero or more UploadFile objects if the method support file uploads.
      */
     public void asyncCallMethod(final AsyncCallHandler handler,
         final String method,
         final JsonData parameters,
         final UploadFile... files) {
+        if (log.isDebugEnabled()) {
+            Object f = files == null ? "" : Arrays.asList(files);
+            log.debug("ENTER: AsyncSimbaChain.asyncCallMethod: "
+                + "handler = ["
+                + handler
+                + "], method = ["
+                + method
+                + "], parameters = ["
+                + parameters
+                + "], files = ["
+                + f
+                + "]");
+        }
 
         try {
             executor.submit(() -> {
@@ -120,29 +136,52 @@ public class AsyncSimbaChain extends SimbaChain {
                         Thread.sleep(poll);
                         now = System.currentTimeMillis();
                     }
-                    if(txn != null) {
+                    if (txn != null) {
+                        if (log.isDebugEnabled()) {
+                            log.debug(
+                                "AsyncSimbaChain.asyncCallMethod: calling handler with transaction: "
+                                    + txn);
+                        }
                         handler.handleResponse(txn);
                     }
                 } catch (Exception e) {
+                    if (log.isDebugEnabled()) {
+                        log.debug(
+                            "AsyncSimbaChain.asyncCallMethod: calling handler with transaction exception: "
+                                + e);
+                    }
                     if (e instanceof SimbaException) {
                         handler.handleTransactionError((SimbaException) e);
                     } else {
-                        handler.handleTransactionError(new SimbaException("Error in async call method",
-                            SimbaException.SimbaError.EXECUTION_ERROR, e));
+                        handler.handleTransactionError(
+                            new SimbaException("Error in async call method",
+                                SimbaException.SimbaError.EXECUTION_ERROR, e));
                     }
                 }
             });
         } catch (Throwable e) {
-           handler.handleExecutionError(e);
+            if (log.isDebugEnabled()) {
+                log.debug("AsyncSimbaChain.asyncCallMethod: calling handler with execution exception: " + e);
+            }
+            handler.handleExecutionError(e);
         }
     }
-    
+
+    /**
+     * Get the size of the queue that is feeding the threadpool. Because submissions take
+     * a while, the queue size is exposed to help monitor and control throughput.
+     *
+     * @return the size of the blocking queue feeding the threadpool.
+     */
     public int getQueueSize() {
         return queue.size();
     }
-    
+
+    /**
+     * This class has a shutdown method to wind up the thread pool.
+     */
     public void shutdown() {
-        if(!executor.isShutdown()) {
+        if (!executor.isShutdown()) {
             executor.shutdown();
         }
     }

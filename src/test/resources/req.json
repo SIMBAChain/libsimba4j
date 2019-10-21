@@ -236,6 +236,89 @@
         }
       }
     },
+    "method3": {
+      "path": "/v1/simbachain/method3/",
+      "method": "POST",
+      "response": {
+        "statusCode": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "id": "1234",
+          "submitted": false,
+          "payload": {
+            "raw": {
+              "to": "0x6f84419344a1caa3c87ecfddc5cdb5272eb24be4",
+              "gas": "0x175f7",
+              "data": "0x53df945100000000000000000000000000000000000000000000000000000000000000a",
+              "from": "0x805cb72c96ab98cc111259b1dd3285388db096ee",
+              "nonce": "0x0",
+              "gasLimit": 95735,
+              "gasPrice": "0x0"
+            },
+            "inputs": {
+              "number": 5,
+              "assetId": "1234",
+              "name": "Foo",
+              "_bundleHash": "46bcae17-0000-0000-0000-d934e67f14cf"
+            },
+            "method": "method2"
+          },
+          "timestamp": "2019-09-23T20:26:35.532Z",
+          "smart_contract_id": "701b726d-f4d9-4d45-a7f8-f3c3ccc0db08",
+          "bytes_stored_on_blockchain": "0",
+          "application_id": "dc659bc6-f776-4f06-869f-b7c121ae3698",
+          "organisation_id": "b6f2ff06-f382-4d06-99bf-14ed3edfa8c9",
+          "bundle_id": "cfe093da-65aa-448e-80bd-788d77079e48",
+          "bytes_stored_on_datastore": "0",
+          "adapter_id": "b3b779c9-b74d-4cab-be21-6a5ff2b70662",
+          "data_store_id": "b9bcbed1-69b1-443b-8d27-72bcc3045bfd",
+          "method_id": "8082a894-49cc-42a4-ae65-e58aeb90569c",
+          "parent_id": "\\0",
+          "is_asset": true,
+          "user_id": 162,
+          "receipt": null,
+          "group_id": null,
+          "member_id": null,
+          "error": null,
+          "transaction_hash": null,
+          "error_details": null
+        }
+      }
+    },
+    "method3_sign": {
+      "path": "/v1/simbachain/transaction/1234/",
+      "method": "POST",
+      "response": {
+        "statusCode": 409,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "errors": [
+            {
+              "id": "913d2481-d83f-45c9-af79-bed0817441fe",
+              "title": "nonce too low",
+              "code": 15001,
+              "source": {
+                "pointer": "/data/attributes/nonce"
+              },
+              "detail": "Transaction with this address and nonce already has a hash",
+              "meta": {
+                "nonce": "0xb0",
+                "address": "0xC341E8e093F44D9149E20F39317Da93def0Dd02b",
+                "transaction_hashes": [
+                  "0x23e1ee0b7f3f0dfe41604bea5c26e9480c97725abe1dbac599611ed9f3f44016"
+                ],
+                "suggested_nonce": "0xb1"
+              },
+              "status": 409
+            }
+          ]
+        }
+      }
+    },
     "list": {
       "path": "/v1/simbachain/transaction/.*",
       "method": "GET",
@@ -421,6 +504,14 @@
                     "name": {
                       "type": "string",
                       "title": "name"
+                    }
+                  }
+                },
+                "method3": {
+                  "parameters": {
+                    "assetId": {
+                      "type": "string",
+                      "title": "assetId"
                     }
                   }
                 }

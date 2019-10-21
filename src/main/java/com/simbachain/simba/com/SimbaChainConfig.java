@@ -33,16 +33,49 @@ public class SimbaChainConfig implements SimbaConfig {
     private String apiKey;
     private Wallet wallet;
     private String managementKey;
+    private int retrySignAttempts;
+    private long retryTransactionSleep;
 
-    public SimbaChainConfig(String apiKey, Wallet wallet, String managementKey) {
+    /**
+     * Create a SimbaChain config.
+     * 'retrySignAttempts' and 'retryTransactionSleep' are used to control how many efforts
+     * are made to overcome out of synch nonce errors. For a single transaction, signing
+     * will be tried 'retrySignAttempts' times, and the payload will be attempted with a new
+     * transaction 'retrySignAttempts' times. So total attempts are maximum 'retrySignAttempts' *
+     * 'retrySignAttempts'.
+     * 
+     * 'retryTransactionSleep' determines how many milliseconds to sleep between attempting
+     * to submit the a new transaction with the same payload.
+     * 
+     * All retries and sleeps takes place inside the 'callMethod' method.
+     * 
+     * @param apiKey the api key for the contract
+     * @param wallet the wallet to use
+     * @param managementKey the management key to use. Not currently required.
+     * @param retrySignAttempts in the case of nonce out of synch errors, try to sign this
+     *                          many times based on the suggested nonce returned from
+     *                          simbachain.
+     * @param retryTransactionSleep in the case of nonce out of synch errors, sleep for
+     *                              this many milliseconds before trying with a nw transaction.
+     */
+    public SimbaChainConfig(String apiKey,
+        Wallet wallet,
+        String managementKey,
+        int retrySignAttempts,
+        long retryTransactionSleep) {
         this.apiKey = apiKey;
         this.wallet = wallet;
         this.managementKey = managementKey;
+        this.retrySignAttempts = retrySignAttempts;
+        this.retryTransactionSleep = retryTransactionSleep;
+    }
+
+    public SimbaChainConfig(String apiKey, Wallet wallet, String managementKey) {
+        this(apiKey, wallet, managementKey, 3, 2*1000);
     }
 
     public SimbaChainConfig(String apiKey, Wallet wallet) {
-        this.apiKey = apiKey;
-        this.wallet = wallet;
+        this(apiKey, wallet, null, 3, 2 * 1000);
     }
 
     public String getApiKey() {
@@ -55,5 +88,13 @@ public class SimbaChainConfig implements SimbaConfig {
 
     public Wallet getWallet() {
         return wallet;
+    }
+
+    public int getRetrySignAttempts() {
+        return retrySignAttempts;
+    }
+
+    public long getRetryTransactionSleep() {
+        return retryTransactionSleep;
     }
 }

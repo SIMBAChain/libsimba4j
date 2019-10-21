@@ -31,6 +31,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -75,9 +76,9 @@ public abstract class Simba<C extends SimbaConfig> {
     /**
      * Constructor overrriden by subclasses.
      *
-     * @param endpoint    the URL of a particular contract API, e.g. https://api.simbachain.com/
-     * @param contract    the name of the contract or the appname, e.g. mycontract
-     * @param config used by subclasses.
+     * @param endpoint the URL of a particular contract API, e.g. https://api.simbachain.com/
+     * @param contract the name of the contract or the appname, e.g. mycontract
+     * @param config   used by subclasses.
      */
     public Simba(String endpoint, String contract, C config) {
         if (!endpoint.endsWith("/")) {
@@ -693,51 +694,45 @@ public abstract class Simba<C extends SimbaConfig> {
             return new HttpResponseException(status, body);
         } else if (mime.equals("application/json") || mime.equals("application/vnd.api+json")) {
             try {
+                StringBuilder sb = new StringBuilder();
                 Map<?, ?> map = mapper.readValue(body, Map.class);
                 Object err = map.get("error");
                 if (err != null) {
-                    String errCode = null;
-                    Object code = map.get("error_code");
-                    if (code != null) {
-                        errCode = code.toString();
+                    if (err instanceof String) {
+                        sb.append(err)
+                          .append(' ');
                     }
-                    if(errCode != null) {
-                        SimbaException.SimbaError errorEnum = mapErrorCode(errCode);
-                        SimbaException ex = new SimbaException(err.toString(), errorEnum);
-                        Object extras = map.get("extra_detail");
-                        if(extras != null && extras instanceof Map) {
-                            Map<String, Object> mp = (Map<String, Object>) extras;
-                            ex.setProperties(mp);
+                    Object detail = map.get("detail");
+                    if (detail != null) {
+                        if (detail instanceof String) {
+                            sb.append(detail);
                         }
-                        ex.setHttpStatus(status);
-                        return ex;
                     }
-                    return new HttpResponseException(status, err.toString());
-                }
-                err = map.get("detail");
-                if (err != null) {
-                    return new HttpResponseException(status, err.toString());
+                    return new HttpResponseException(status, sb.toString());
                 }
                 err = map.get("errors");
                 if (err != null && err instanceof Collection) {
-                    StringBuilder sb = new StringBuilder();
-                    Collection<?> c = (Collection) err;
-                    for (Object o : c) {
-                        if (o instanceof String) {
-                            sb.append((String) o);
-                        } else if (o instanceof Map) {
-                            Map<?, ?> error = (Map) o;
-                            Object title = error.get("title");
-                            if (title != null && title instanceof String) {
-                                sb.append(title)
-                                  .append(": ");
-                            }
-                            Object detail = error.get("detail");
-                            if (detail != null && detail instanceof String) {
-                                sb.append(detail);
-                            }
+                    Errors errs = mapper.readValue(body, Errors.class);
+                    List<Error> ers = errs.getErrors();
+                    if (ers != null && ers.size() > 0) {
+                        Error error = ers.get(0);
+                        String title = error.getTitle();
+                        if (title != null) {
+                            sb.append(title)
+                              .append(": ");
                         }
-                        sb.append("\n");
+                        String detail = error.getDetail();
+                        if (detail != null) {
+                            sb.append(detail);
+                        }
+                        String errCode = error.getCode();
+                        if (errCode != null) {
+                            SimbaException.SimbaError errorEnum = mapErrorCode(errCode);
+                            SimbaException ex = new SimbaException(err.toString(), errorEnum);
+                            ex.setProperties(error.getMeta());
+                            ex.setHttpStatus(status);
+                            return ex;
+                        }
                     }
                     return new HttpResponseException(status, sb.toString());
                 }
@@ -748,9 +743,11 @@ public abstract class Simba<C extends SimbaConfig> {
         }
         return new HttpResponseException(status, body);
     }
-    
+
     private SimbaException.SimbaError mapErrorCode(String code) {
-        if(code == null || code.trim().length() == 0) {
+        if (code == null
+            || code.trim()
+                   .length() == 0) {
             return SimbaException.SimbaError.HTTP_ERROR;
         }
         switch (code) {
@@ -823,6 +820,7 @@ public abstract class Simba<C extends SimbaConfig> {
      * Create a response handler for JSON that tries to deserialize to the given class.
      *
      * @param tf the type reference
+     * @param <C> the type reference type. 
      * @return ResponseHandler that returns an instance of the requested class
      */
     protected <C> ResponseHandler<C> jsonResponseHandler(final TypeReference<C> tf) {
@@ -1024,13 +1022,16 @@ public abstract class Simba<C extends SimbaConfig> {
         }
         return ex;
     }
-    
-    private Future<Transaction> submit(String txnId, long interval, int totalSeconds, Transaction.State state) {
+
+    private Future<Transaction> submit(String txnId,
+        long interval,
+        int totalSeconds,
+        Transaction.State state) {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         Future<Transaction> txn = executor.submit(
             new TransactionCallable(txnId, interval, totalSeconds, state));
         executor.shutdown();
         return txn;
-        
+
     }
 }
