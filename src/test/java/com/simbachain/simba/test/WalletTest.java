@@ -65,7 +65,7 @@ public class WalletTest {
     public void testMnemonicWallet() throws SimbaException {
 
         Wallet wallet = new FileWallet("target/test-classes/keys", "mnemonic");
-        String file = wallet.loadOrCreateMnemonicWallet("password");
+        String file = wallet.loadOrCreateMnemonicWallet("password", "laundry pave energy busy stable near lobster teach address day gate index");
         assertTrue(file.contains("UTC--"));
         String addr = wallet.getAddress();
         assertTrue(addr.startsWith("0x"));
@@ -81,5 +81,30 @@ public class WalletTest {
 
         deleted = wallet.deleteWallet();
         assertTrue(deleted);
+        
+    }
+
+    @Test
+    public void testNewMnemonicWallet() throws SimbaException {
+
+        Wallet wallet = new FileWallet("target/test-classes/keys", "mnemonicnew");
+        String file = wallet.generateMnemonicWallet("password");
+        wallet.loadMnemonicWallet(wallet.getMnemonic());
+        assertTrue(file.contains("UTC--"));
+        String addr = wallet.getAddress();
+        assertTrue(addr.startsWith("0x"));
+
+
+        Wallet wallet1 = new FileWallet("target/test-classes/keys", "mnemonicnew1");
+        String file1 = wallet1.loadOrCreateMnemonicWallet("password", wallet.getMnemonic());
+        assertTrue(file1.contains("UTC--"));
+        assertEquals(wallet.getAddress(), wallet1.getAddress());
+        assertEquals(wallet.getPrivateKey(), wallet1.getPrivateKey());
+        boolean deleted = wallet1.deleteWallet();
+        assertTrue(deleted);
+
+        deleted = wallet.deleteWallet();
+        assertTrue(deleted);
+
     }
 }

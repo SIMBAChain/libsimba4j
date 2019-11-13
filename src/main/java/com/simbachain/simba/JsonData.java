@@ -56,6 +56,18 @@ public class JsonData {
         return new JsonData().and(key, value);
     }
 
+    public static JsonData with(String key, String[] value) {
+        return new JsonData().and(key, value);
+    }
+
+    public static JsonData with(String key, Number[] value) {
+        return new JsonData().and(key, value);
+    }
+
+    public static JsonData with(String key, boolean[] value) {
+        return new JsonData().and(key, value);
+    }
+
     public JsonData and(String key, String value) {
         map.put(key, value);
         return this;
@@ -67,6 +79,21 @@ public class JsonData {
     }
 
     public JsonData and(String key, boolean value) {
+        map.put(key, value);
+        return this;
+    }
+
+    public JsonData and(String key, String[] value) {
+        map.put(key, value);
+        return this;
+    }
+
+    public JsonData and(String key, Number[] value) {
+        map.put(key, value);
+        return this;
+    }
+
+    public JsonData and(String key, boolean[] value) {
         map.put(key, value);
         return this;
     }

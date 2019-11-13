@@ -15,7 +15,7 @@ to your pom file:
 <dependency>
     <groupId>com.simbachain</groupId>
     <artifactId>libsimba4j</artifactId>
-    <version>0.1.2</version>
+    <version>0.1.3</version>
 </dependency>
 ```
 
@@ -27,7 +27,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.simbachain:libsimba4j:0.1.2'
+    implementation 'com.simbachain:libsimba4j:0.1.3'
 }
 ```
 
@@ -64,9 +64,9 @@ If you want to create a wallet with a new mnemonic that you can save somewhere s
 
 ```
 Wallet wallet = new FileWallet("./keys", "mywallet");
-wallet.loadOrCreateMnemonicWallet("mypassword");
-String m = wallet.getMnemonic();
-System.out.println(m);
+wallet.generateMnemonicWallet("password");
+System.out.println(wallet.getMnemonic());
+wallet.loadMnemonicWallet(wallet.getMnemonic());
 ```
 
 The FileWallet creates directories if they do not exist. The first argument to the constructor

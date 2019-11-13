@@ -23,11 +23,15 @@
 package com.simbachain.wallet;
 
 import java.io.File;
+import java.security.SecureRandom;
 
 import com.simbachain.SimbaException;
+import org.web3j.crypto.Bip32ECKeyPair;
 import org.web3j.crypto.Bip39Wallet;
 import org.web3j.crypto.Credentials;
+import org.web3j.crypto.MnemonicUtils;
 import org.web3j.crypto.WalletUtils;
+
 
 /**
  *  File based Wallet implementation.
@@ -39,6 +43,7 @@ public class FileWallet extends Wallet {
     private Credentials credentials;
     private File walletDir;
     private String mnemonic = null;
+    private static final SecureRandom secureRandom = new SecureRandom();
 
     /**
      * Create a FileWallet. The directory is the root path to where you store keys.
@@ -117,17 +122,10 @@ public class FileWallet extends Wallet {
      */
     @Override
     public String generateMnemonicWallet(String passkey) throws SimbaException {
-        if (walletExists()) {
-            throw new SimbaException("Error generating wallet. A wallet already exists.",
-                SimbaException.SimbaError.WALLET_EXISTS);
-        }
-        try {
-            Bip39Wallet bw = WalletUtils.generateBip39Wallet(passkey, walletDir);
-            this.mnemonic = bw.getMnemonic();
-            return new File(walletDir, bw.getFilename()).getAbsolutePath();
-        } catch (Exception e) {
-            throw new SimbaException("Error generating wallet", SimbaException.SimbaError.WALLET_GENERATE_FAILED, e);
-        }
+        byte[] initialEntropy = new byte[16];
+        secureRandom.nextBytes(initialEntropy);
+        String mnemonic = MnemonicUtils.generateMnemonic(initialEntropy);
+        return generateMnemonicWallet(passkey, mnemonic);
     }
 
     /**
@@ -144,12 +142,13 @@ public class FileWallet extends Wallet {
     public synchronized String generateMnemonicWallet(String passkey, String mnemonic)
         throws SimbaException {
         if (walletExists()) {
-            throw new SimbaException("Error generating wallet. A wallet already exists.",
+            throw new SimbaException("Error generating wallet. A wallet already exists at " + walletDir,
                 SimbaException.SimbaError.WALLET_EXISTS);
         }
         try {
             Bip39Wallet bw = WalletUtils.generateBip39WalletFromMnemonic(passkey, mnemonic,
                 walletDir);
+            this.mnemonic = mnemonic;
             return new File(walletDir, bw.getFilename()).getAbsolutePath();
         } catch (Exception e) {
             throw new SimbaException("Error generating wallet", SimbaException.SimbaError.WALLET_GENERATE_FAILED, e);
@@ -176,6 +175,37 @@ public class FileWallet extends Wallet {
             this.credentials = WalletUtils.loadCredentials(passkey, wallet);
             return wallet.getAbsolutePath();
             
+        } catch (Exception e) {
+            throw new SimbaException(SimbaException.SimbaError.LOAD_FAILED, e);
+        }
+    }
+
+    /**
+     * Load the Wallet using the password.
+     *
+     * @param mnemonic The mnemonic for the Wallet.
+     * @return The location of the Wallet.
+     * @throws SimbaException if an error occurs
+     */
+    @Override
+    public synchronized String loadMnemonicWallet(String mnemonic) throws SimbaException {
+        try {
+            File wallet = getWalletFile(walletDir);
+            if (wallet == null) {
+                throw new SimbaException(
+                    String.format("Cannot find wallet at %s", walletDir.getAbsolutePath()),
+                    SimbaException.SimbaError.WALLET_NOT_FOUND);
+            }
+            int[] derivationPath = {44 | Bip32ECKeyPair.HARDENED_BIT, 60 | Bip32ECKeyPair.HARDENED_BIT,
+                                    0 | Bip32ECKeyPair.HARDENED_BIT, 0, 0};
+            Bip32ECKeyPair masterKeypair = Bip32ECKeyPair.generateKeyPair(
+                MnemonicUtils.generateSeed(mnemonic, null));
+            Bip32ECKeyPair derivedKeyPair = Bip32ECKeyPair.deriveKeyPair(masterKeypair,
+                derivationPath);
+            this.credentials = Credentials.create(derivedKeyPair);
+            this.mnemonic = mnemonic;
+            return wallet.getAbsolutePath();
+
         } catch (Exception e) {
             throw new SimbaException(SimbaException.SimbaError.LOAD_FAILED, e);
         }

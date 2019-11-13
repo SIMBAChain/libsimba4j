@@ -71,8 +71,7 @@ public abstract class Wallet {
 
     /**
      * Generate a Wallet that can be recreated elsewhere with a mnemonic.
-     * Once this method completes, the getMnemonic function will return null
-     * as the client already knows it.
+     * Once this method completes, the getMnemonic function will return non-null.
      *
      * @param passkey the password to use.
      * @param mnemonic the mnemonic to use.
@@ -123,22 +122,7 @@ public abstract class Wallet {
     public String loadOrCreateWallet(String passkey) throws SimbaException {
         
         if (!walletExists()) {
-            generateMnemonicWallet(passkey);
-        }
-        return loadWallet(passkey);
-    }
-
-    /**
-     * Convenience method to check if the Wallet exists and if not, create it. Then try to load it.
-     *
-     * @param passkey The password to possibly create and then load the Wallet.
-     * @return The location of the Wallet.
-     * @throws SimbaException if an error occurs.
-     */
-    public String loadOrCreateMnemonicWallet(String passkey) throws SimbaException {
-
-        if (!walletExists()) {
-            generateMnemonicWallet(passkey);
+            generateWallet(passkey);
         }
         return loadWallet(passkey);
     }
@@ -156,7 +140,20 @@ public abstract class Wallet {
         if (!walletExists()) {
             generateMnemonicWallet(passkey, mnemonic);
         }
-        return loadWallet(passkey);
+        return loadMnemonicWallet(mnemonic);
+    }
+
+    /**
+     * Returns the private key for the wallet in hex format.
+     * Note: this is without the '0x' prefix.
+     *
+     * @return a hex string representation of the private key.
+     */
+    public String getPrivateKey() {
+        Credentials c = getCredentials();
+        return c.getEcKeyPair()
+                .getPrivateKey()
+                .toString(16);
     }
 
     /**
@@ -166,6 +163,15 @@ public abstract class Wallet {
      * @throws SimbaException if an error occurs
      */
     public abstract String loadWallet(String passkey) throws SimbaException;
+
+    /**
+     * Load the Wallet using the password.
+     *
+     * @param mneminic The mnemonic for the Wallet.
+     * @return The location of the Wallet.
+     * @throws SimbaException if an error occurs
+     */
+    public abstract String loadMnemonicWallet(String mneminic) throws SimbaException;
     
     /**
      * If the Wallet was created with a mnemonic that was not supplied by the client,
