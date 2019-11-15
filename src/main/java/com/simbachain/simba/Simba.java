@@ -916,8 +916,18 @@ public abstract class Simba<C extends SimbaConfig> {
         if (files != null && files.length > 0) {
             MultipartEntityBuilder builder = MultipartEntityBuilder.create();
             for (String key : data.keySet()) {
-                builder.addTextBody(key, data.get(key)
-                                             .toString());
+                Object d = data.get(key);
+                if (d instanceof List || d.getClass()
+                                          .isArray()) {
+                    try {
+                        d = this.mapper.writeValueAsString(d);
+                    } catch (JsonProcessingException e) {
+                        throw new SimbaException("Error converting array to JSON",
+                            SimbaException.SimbaError.MESSAGE_ERROR, e);
+                    }
+                }
+                builder.addTextBody(key, d.toString());
+
             }
             for (int i = 0; i < files.length; i++) {
                 UploadFile file = files[i];

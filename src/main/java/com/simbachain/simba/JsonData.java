@@ -23,6 +23,7 @@
 package com.simbachain.simba;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -68,6 +69,10 @@ public class JsonData {
         return new JsonData().and(key, value);
     }
 
+    public static JsonData with(String key, List<?> value) {
+        return new JsonData().and(key, value);
+    }
+
     public JsonData and(String key, String value) {
         map.put(key, value);
         return this;
@@ -94,6 +99,11 @@ public class JsonData {
     }
 
     public JsonData and(String key, boolean[] value) {
+        map.put(key, value);
+        return this;
+    }
+
+    public JsonData and(String key, List<?> value) {
         map.put(key, value);
         return this;
     }
