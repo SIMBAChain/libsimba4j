@@ -131,6 +131,15 @@ public abstract class Simba<C extends SimbaConfig> {
     }
 
     /**
+     * Get the api doc path element.
+     *
+     * @return the api doc path element.
+     */
+    public String getApiPath() {
+        return String.format("%s%s%s/?format=openapi", getEndpoint(), getvPath(), getContract());
+    }
+
+    /**
      * Set the api version path element. Default is 'v1/'
      *
      * @param vPath a new version path element.
@@ -149,8 +158,7 @@ public abstract class Simba<C extends SimbaConfig> {
      * @throws SimbaException if an error occurs
      */
     public void init() throws SimbaException {
-        Api result = this.get(
-            String.format("%s%s%s/?format=openapi", getEndpoint(), getvPath(), getContract()),
+        Api result = this.get(getApiPath(),
             jsonResponseHandler(Api.class));
         ApiInfo info = result.getInfo();
         this.metadata = info.getAppMetadata();
