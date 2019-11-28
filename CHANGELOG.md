@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.1.3](https://github.com/SIMBAChain/libsimba4j/compare/v0.1.3...v0.1.4) (2019-11-28)
+## [0.1.4](https://github.com/SIMBAChain/libsimba4j/compare/v0.1.3...v0.1.4) (2019-11-28)
 
 
 ### Bug Fixes
