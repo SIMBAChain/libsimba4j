@@ -36,9 +36,9 @@ public class Balance {
     @JsonProperty
     private String currency;
     @JsonProperty
-    private Long amount;
+    private String amount;
 
-    public Balance(boolean poa, String currency, Long amount) {
+    public Balance(boolean poa, String currency, String amount) {
         this.poa = poa;
         this.currency = currency;
         this.amount = amount;
@@ -64,11 +64,11 @@ public class Balance {
         this.currency = currency;
     }
     
-    public Long getAmount() {
+    public String getAmount() {
         return amount;
     }
 
-    public void setAmount(Long amount) {
+    public void setAmount(String amount) {
         this.amount = amount;
     }
 

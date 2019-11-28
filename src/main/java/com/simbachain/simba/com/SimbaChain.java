@@ -482,7 +482,7 @@ public class SimbaChain extends Simba<SimbaChainConfig> {
         }
         if (this.getMetadata()
                 .getPoa()) {
-            Balance b = new Balance(true, "", -1L);
+            Balance b = new Balance(true, "", "0");
             if (log.isDebugEnabled()) {
                 log.debug("EXIT: SimbaChain.getBalance: returning " + b);
             }
@@ -599,13 +599,12 @@ public class SimbaChain extends Simba<SimbaChainConfig> {
         String nonce = suggestedNonce != null ? suggestedNonce : raw.getNonce();
         String gasPrice = raw.getGasPrice();
         String gasLimit = raw.getGasLimit();
-        BigInteger value = raw.getValue() == null ? BigInteger.ZERO
-            : Numeric.toBigInt(raw.getValue());
+        BigInteger value = getBitInt(raw.getValue());
         String to = raw.getTo();
         String data = raw.getData();
 
-        RawTransaction rt = RawTransaction.createTransaction(Numeric.toBigInt(nonce),
-            Numeric.toBigInt(gasPrice), new BigInteger(gasLimit), to, value, data);
+        RawTransaction rt = RawTransaction.createTransaction(getBitInt(nonce),
+            getBitInt(gasPrice), getBitInt(gasLimit), to, value, data);
         String signed = this.wallet.sign(rt);
 
         try {
@@ -636,6 +635,17 @@ public class SimbaChain extends Simba<SimbaChainConfig> {
                 throw e;
             }
         }
+    }
+    
+    private BigInteger getBitInt(String value) {
+        if(value == null || value.trim().length() == 0) {
+            return BigInteger.ZERO;
+        }
+        value = value.trim();
+        if (value.startsWith("0x")) {
+            return Numeric.toBigInt(value);
+        }
+        return new BigInteger(value);
     }
 
 }

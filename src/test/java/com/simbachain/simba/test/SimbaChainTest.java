@@ -200,7 +200,7 @@ public class SimbaChainTest {
         Balance balance = simba.getBalance();
         assertTrue(balance.getCurrency()
                           .equals(""));
-        assertTrue(balance.getAmount() == -1);
+        assertTrue(balance.getAmount().equals("0"));
     }
 
     @Test
@@ -216,7 +216,7 @@ public class SimbaChainTest {
         Balance balance = simba.getBalance();
         assertTrue(balance.getCurrency()
                           .equals("ethers"));
-        assertTrue(balance.getAmount() == 10);
+        assertTrue(balance.getAmount().equals("10"));
         assertFalse(balance.isPoa());
     }
 

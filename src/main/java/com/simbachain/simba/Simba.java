@@ -158,8 +158,7 @@ public abstract class Simba<C extends SimbaConfig> {
      * @throws SimbaException if an error occurs
      */
     public void init() throws SimbaException {
-        Api result = this.get(getApiPath(),
-            jsonResponseHandler(Api.class));
+        Api result = this.get(getApiPath(), jsonResponseHandler(Api.class));
         ApiInfo info = result.getInfo();
         this.metadata = info.getAppMetadata();
         if (log.isDebugEnabled()) {
@@ -827,8 +826,8 @@ public abstract class Simba<C extends SimbaConfig> {
     /**
      * Create a response handler for JSON that tries to deserialize to the given class.
      *
-     * @param tf the type reference
-     * @param <C> the type reference type. 
+     * @param tf  the type reference
+     * @param <C> the type reference type.
      * @return ResponseHandler that returns an instance of the requested class
      */
     protected <C> ResponseHandler<C> jsonResponseHandler(final TypeReference<C> tf) {
@@ -926,7 +925,7 @@ public abstract class Simba<C extends SimbaConfig> {
             for (String key : data.keySet()) {
                 Object d = data.get(key);
                 if (d instanceof List || d.getClass()
-                                          .isArray()) {
+                                          .isArray() || d instanceof Map) {
                     try {
                         d = this.mapper.writeValueAsString(d);
                     } catch (JsonProcessingException e) {

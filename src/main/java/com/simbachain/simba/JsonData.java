@@ -22,6 +22,7 @@
 
 package com.simbachain.simba;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -69,6 +70,10 @@ public class JsonData {
         return new JsonData().and(key, value);
     }
 
+    public static JsonData with(String key, JsonData[] value) {
+        return new JsonData().and(key, value);
+    }
+
     public static JsonData with(String key, List<?> value) {
         return new JsonData().and(key, value);
     }
@@ -103,8 +108,17 @@ public class JsonData {
         return this;
     }
 
+    public JsonData and(String key, JsonData[] value) {
+        List<Map<String, Object>> list = new ArrayList<>();
+        for (JsonData jsonData : value) {
+            list.add(jsonData.asMap());
+        }
+        map.put(key, list);
+        return this;
+    }
+
     public JsonData and(String key, List<?> value) {
-        map.put(key, value);
+        map.put(key, getList(value));
         return this;
     }
 
@@ -140,5 +154,19 @@ public class JsonData {
           sb.append(map);
         sb.append('}');
         return sb.toString();
+    }
+
+    private List<Object> getList(List<?> value) {
+        List<Object> inserts = new ArrayList<>();
+        for (Object o : value) {
+            if (o instanceof JsonData) {
+                inserts.add((((JsonData) o).asMap()));
+            } else if (o instanceof List) {
+                inserts.add(getList((List<?>) o));
+            } else {
+                inserts.add(o);
+            }
+        }
+        return inserts;
     }
 }

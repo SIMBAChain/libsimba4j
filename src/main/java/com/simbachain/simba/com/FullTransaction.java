@@ -53,8 +53,6 @@ public class FullTransaction implements Transaction {
     private String transactionHash;
     @JsonProperty
     private String error;
-    @JsonProperty("error_details")
-    private List<Object> errorDetails = new ArrayList<>();
     @JsonProperty
     private String status;
     @JsonProperty
@@ -205,14 +203,6 @@ public class FullTransaction implements Transaction {
         this.error = error;
     }
 
-    public List<Object> getErrorDetails() {
-        return errorDetails;
-    }
-
-    public void setErrorDetails(List<Object> errorDetails) {
-        this.errorDetails = errorDetails;
-    }
-
     public String getStatus() {
         return status;
     }
@@ -255,9 +245,6 @@ public class FullTransaction implements Transaction {
           .append('\'');
         sb.append(", error='")
           .append(error)
-          .append('\'');
-        sb.append(", errorDetails='")
-          .append(errorDetails)
           .append('\'');
         sb.append(", status='")
           .append(status)
