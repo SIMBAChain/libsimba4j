@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.5](https://github.com/SIMBAChain/libsimba4j/compare/v0.1.4...v0.1.5) (2020-04-25)
+
+
+### Features
+
+* Upated Jackson databind library from 2.9.10.1 to 2.9.10.4 because of security issue. 
+
+
 ## [0.1.4](https://github.com/SIMBAChain/libsimba4j/compare/v0.1.3...v0.1.4) (2019-11-28)
 
 
