@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 SIMBA Chain Inc.
+ * Copyright (c) 2020 SIMBA Chain Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-package com.simbachain.simba;
+package com.simbachain.simba.com;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;

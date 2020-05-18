@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 SIMBA Chain Inc.
+ * Copyright (c) 2020 SIMBA Chain Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -41,6 +41,10 @@ public class JsonData {
     private JsonData(Map<String, Object> map) {
         this.map.putAll(map);
     }
+
+    public static JsonData jsonData() {
+        return new JsonData();
+    }
     
     public static JsonData with(String key, String value) {
         return new JsonData().and(key, value);
@@ -74,6 +78,42 @@ public class JsonData {
         return new JsonData().and(key, value);
     }
 
+    public static JsonData with(String key, Number[][] value) {
+        return new JsonData().and(key, value);
+    }
+
+    public static JsonData with(String key, boolean[][] value) {
+        return new JsonData().and(key, value);
+    }
+
+    public static JsonData with(String key, String[][] value) {
+        return new JsonData().and(key, value);
+    }
+
+    public static JsonData with(String key, Number[][][] value) {
+        return new JsonData().and(key, value);
+    }
+
+    public static JsonData with(String key, boolean[][][] value) {
+        return new JsonData().and(key, value);
+    }
+
+    public static JsonData with(String key, String[][][] value) {
+        return new JsonData().and(key, value);
+    }
+
+    public static JsonData with(String key, Number[][][][] value) {
+        return new JsonData().and(key, value);
+    }
+
+    public static JsonData with(String key, boolean[][][][] value) {
+        return new JsonData().and(key, value);
+    }
+
+    public static JsonData with(String key, String[][][][] value) {
+        return new JsonData().and(key, value);
+    }
+
     public static JsonData with(String key, List<?> value) {
         return new JsonData().and(key, value);
     }
@@ -104,6 +144,51 @@ public class JsonData {
     }
 
     public JsonData and(String key, boolean[] value) {
+        map.put(key, value);
+        return this;
+    }
+
+    public JsonData and(String key, String[][] value) {
+        map.put(key, value);
+        return this;
+    }
+
+    public JsonData and(String key, Number[][] value) {
+        map.put(key, value);
+        return this;
+    }
+
+    public JsonData and(String key, boolean[][] value) {
+        map.put(key, value);
+        return this;
+    }
+
+    public JsonData and(String key, String[][][] value) {
+        map.put(key, value);
+        return this;
+    }
+
+    public JsonData and(String key, Number[][][] value) {
+        map.put(key, value);
+        return this;
+    }
+
+    public JsonData and(String key, boolean[][][] value) {
+        map.put(key, value);
+        return this;
+    }
+
+    public JsonData and(String key, String[][][][] value) {
+        map.put(key, value);
+        return this;
+    }
+
+    public JsonData and(String key, Number[][][][] value) {
+        map.put(key, value);
+        return this;
+    }
+
+    public JsonData and(String key, boolean[][][][] value) {
         map.put(key, value);
         return this;
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 SIMBA Chain Inc.
+ * Copyright (c) 2020 SIMBA Chain Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -43,6 +43,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.simbachain.SimbaException;
+import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.ResponseHandler;
@@ -69,7 +70,7 @@ public abstract class Simba<C extends SimbaConfig> {
     private String contract;
     protected ObjectMapper mapper = new ObjectMapper();
     protected CloseableHttpClient client;
-    protected AppMetadata metadata = new AppMetadata();
+    protected Metadata metadata;
     private C config;
     protected Logger log = LoggerFactory.getLogger(getClass().getName());
 
@@ -113,7 +114,7 @@ public abstract class Simba<C extends SimbaConfig> {
      *
      * @return application metadata.
      */
-    public AppMetadata getMetadata() {
+    public Metadata getMetadata() {
         return metadata;
     }
 
@@ -158,17 +159,13 @@ public abstract class Simba<C extends SimbaConfig> {
      * @throws SimbaException if an error occurs
      */
     public void init() throws SimbaException {
-        Api result = this.get(getApiPath(), jsonResponseHandler(Api.class));
-        ApiInfo info = result.getInfo();
-        this.metadata = info.getAppMetadata();
+        this.metadata = loadMetadata();
         if (log.isDebugEnabled()) {
-            try {
-                log.debug(mapper.writeValueAsString(this.metadata));
-            } catch (JsonProcessingException e) {
-                log.error("Error logging metadata", e);
-            }
+            log.debug(this.metadata.toString());
         }
     }
+    
+    protected abstract Metadata loadMetadata() throws SimbaException;
 
     /**
      * get a Transaction given a transaction hash
@@ -356,33 +353,6 @@ public abstract class Simba<C extends SimbaConfig> {
     }
 
     /**
-     * Wait for a transaction to reach INITIALIZED stage.
-     *
-     * @param txnId        The transaction or requiest ID.
-     * @param interval     Interval to poll the server.
-     * @param totalSeconds Total time to wait.
-     * @return a Future object that returns a Transaction.
-     * @throws SimbaException if something goes wrong.
-     */
-    public Future<Transaction> waitForTransactionInitialized(String txnId,
-        long interval,
-        int totalSeconds) throws SimbaException {
-        return submit(txnId, interval, totalSeconds, Transaction.State.INITIALIZED);
-    }
-
-    /**
-     * Wait for a transaction to reach INITIALIZED stage. Polling interval is set to 1 second
-     * and total wait time is set to 10 seconds.
-     *
-     * @param txnId The transaction or requiest ID.
-     * @return a Future object that returns a Transaction.
-     * @throws SimbaException if something goes wrong.
-     */
-    public Future<Transaction> waitForTransactionInitialized(String txnId) throws SimbaException {
-        return submit(txnId, 1000, 10, Transaction.State.INITIALIZED);
-    }
-
-    /**
      * Wait for a transaction to reach SUBMITTED stage.
      *
      * @param txnId        The transaction or requiest ID.
@@ -433,13 +403,45 @@ public abstract class Simba<C extends SimbaConfig> {
             long end = now + (totalSeconds * 1000);
             while (now < end) {
                 txn = getTransaction(txnId);
-                if (txn != null && txn.getState() == state) {
+                if (txn != null && (txn.getState() == state
+                    || txn.getState() == Transaction.State.COMPLETED)) {
                     return txn;
                 }
                 Thread.sleep(poll);
                 now = System.currentTimeMillis();
             }
             return txn;
+        }
+    }
+    
+    public static class HeaderedResponse<C> {
+        
+        private Header[] headers;
+        private C response;
+
+        public HeaderedResponse(Header[] headers, C response) {
+            this.headers = headers;
+            this.response = response;
+        }
+
+        public Header[] getHeaders() {
+            return headers;
+        }
+
+        public C getResponse() {
+            return response;
+        }
+        
+        public String getHeaderValue(String name) {
+            if (this.headers != null) {
+                for (Header header : this.headers) {
+                    if (header.getName()
+                              .equalsIgnoreCase(name)) {
+                        return header.getValue();
+                    }
+                }
+            }
+            return null;
         }
     }
 
@@ -604,28 +606,27 @@ public abstract class Simba<C extends SimbaConfig> {
             throw new SimbaException("No metadata. You may need to call init() first.",
                 SimbaException.SimbaError.METADATA_NOT_AVAILABLE);
         }
-        Method m = getMetadata().getMethods()
-                                .get(method);
+        Method m = getMetadata().getMethod(method);
         if (m == null) {
             throw new SimbaException(String.format("No method named %s", method),
                 SimbaException.SimbaError.MESSAGE_ERROR);
         }
         Set<String> keys = parameters.keys();
         for (String key : keys) {
-            if (key.equals("_files")) {
+            if (key.equals(getMetadata().getFileIndicator())) {
                 throw new SimbaException(String.format(
                     "Files parameters%s for method %s should not be used. Please upload files as attachments",
                     key, method), SimbaException.SimbaError.MESSAGE_ERROR);
             }
-            if (m.getParameters()
+            if (m.getParameterMap()
                  .get(key) == null) {
                 throw new SimbaException(
                     String.format("Unknown parameter %s for method %s", key, method),
                     SimbaException.SimbaError.MESSAGE_ERROR);
             }
         }
-        if (m.getParameters()
-             .get("_files") == null && files) {
+        if (m.getParameterMap()
+             .get(getMetadata().getFileIndicator()) == null && files) {
             throw new SimbaException(
                 String.format("Method %s does not support file uploads.", method),
                 SimbaException.SimbaError.MESSAGE_ERROR);
@@ -646,15 +647,20 @@ public abstract class Simba<C extends SimbaConfig> {
             throw new SimbaException("No metadata. You may need to call init() first.",
                 SimbaException.SimbaError.METADATA_NOT_AVAILABLE);
         }
-        Method m = getMetadata().getMethods()
-                                .get(method);
+        Method m = getMetadata().getMethod(method);
         if (m == null) {
             throw new SimbaException(String.format("No method named %s", method),
                 SimbaException.SimbaError.MESSAGE_ERROR);
         }
         for (Query.Param<?> parameter : parameters.getParams()) {
             String name = parameter.getName();
-            if (m.getParameters()
+            if (name.contains(".")) {
+                name = name.substring(name.indexOf(".") + 1);
+                if (name.contains(".")) {
+                    name = name.substring(0, name.indexOf(".") + 1);
+                }
+            }
+            if (m.getParameterMap()
                  .get(name) == null) {
                 throw new SimbaException(
                     String.format("Unknown parameter %s for method %s", name, method),
@@ -681,7 +687,7 @@ public abstract class Simba<C extends SimbaConfig> {
         return HttpClients.createDefault();
     }
 
-    private IOException createException(String mime, int status, String reason, String body) {
+    protected IOException createException(String mime, int status, String reason, String body) {
         if (log.isDebugEnabled()) {
             log.debug("ENTER: Simba.createException: "
                 + "mime = ["
@@ -718,7 +724,7 @@ public abstract class Simba<C extends SimbaConfig> {
                     return new HttpResponseException(status, sb.toString());
                 }
                 err = map.get("errors");
-                if (err != null && err instanceof Collection) {
+                if (err instanceof Collection) {
                     Errors errs = mapper.readValue(body, Errors.class);
                     List<Error> ers = errs.getErrors();
                     if (ers != null && ers.size() > 0) {
@@ -815,6 +821,7 @@ public abstract class Simba<C extends SimbaConfig> {
                 mime = contentType.getMimeType();
                 responseString = EntityUtils.toString(entity);
             }
+            System.out.println("Simba.jsonResponseHandler JSON: " + responseString);
             if (status >= 200 && status < 300) {
                 return mapper.readValue(responseString, cls);
             } else {
@@ -846,6 +853,36 @@ public abstract class Simba<C extends SimbaConfig> {
             }
             if (status >= 200 && status < 300) {
                 return mapper.readValue(responseString, tf);
+            } else {
+                throw createException(mime, status, reason, responseString);
+            }
+        };
+    }
+
+    /**
+     * Create a response handler for JSON that tries to deserialize to the given class.
+     *
+     * @param tf  the type reference
+     * @param <C> the type reference type.
+     * @return ResponseHandler that returns an instance of the requested class
+     */
+    protected <C> ResponseHandler<HeaderedResponse<C>> jsonHeaderResponseHandler(final TypeReference<C> tf) {
+        return response -> {
+            int status = response.getStatusLine()
+                                 .getStatusCode();
+            String reason = response.getStatusLine()
+                                    .getReasonPhrase();
+            String mime = "text/plain";
+            String responseString = "";
+            HttpEntity entity = response.getEntity();
+            if (entity != null) {
+                ContentType contentType = ContentType.getOrDefault(entity);
+                mime = contentType.getMimeType();
+                responseString = EntityUtils.toString(entity);
+            }
+            if (status >= 200 && status < 300) {
+                Header[] headers = response.getAllHeaders();
+                return new HeaderedResponse<C>(headers, mapper.readValue(responseString, tf));
             } else {
                 throw createException(mime, status, reason, responseString);
             }

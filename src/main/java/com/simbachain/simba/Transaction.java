@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 SIMBA Chain Inc.
+ * Copyright (c) 2020 SIMBA Chain Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -52,13 +52,15 @@ import java.util.Map;
  *  
  *  COMPLETED, which means the transaction made it to the blockchain and has been confirmed.
  */
-public interface Transaction {
+public interface Transaction extends Ided {
 
     /**
      * Possible states a transaction can be in.
      */
     public static enum State {
-        INITIALIZED, SUBMITTED, FAILED, COMPLETED
+        RECEIVED, VALIDATED, OFFCHAIN_SUBMITTED, SIGNED,
+        INITIALIZED, SUBMITTED, FAILED, COMPLETED,
+        ACCEPTED, TIMED_OUT, PENDING
     }
 
     /**

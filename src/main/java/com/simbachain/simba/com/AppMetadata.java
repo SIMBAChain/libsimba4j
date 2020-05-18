@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 SIMBA Chain Inc.
+ * Copyright (c) 2020 SIMBA Chain Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,12 +20,15 @@
  * SOFTWARE.
  */
 
-package com.simbachain.simba;
+package com.simbachain.simba.com;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.simbachain.simba.Metadata;
+import com.simbachain.simba.Method;
 
 /**
  * Application metadata that describes various aspects of a contract such as methods
@@ -33,7 +36,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * 
  * This is retrieved in the init() method of a Simba instance.
  */
-public class AppMetadata {
+public class AppMetadata implements Metadata {
 
     @JsonProperty ("api_name")
     private String apiName;
@@ -53,7 +56,7 @@ public class AppMetadata {
     private String type;
 
     @JsonProperty
-    private Map<String, Method> methods = new HashMap<>();
+    private Map<String, AppMethod> methods = new HashMap<>();
 
     public AppMetadata() {
     }
@@ -100,7 +103,7 @@ public class AppMetadata {
         this.networkType = networkType;
     }
 
-    public boolean getPoa() {
+    public boolean isPoa() {
         return poa;
     }
 
@@ -120,16 +123,28 @@ public class AppMetadata {
         return type;
     }
 
+    @Override
+    @JsonIgnore
+    public Method getMethod(String name) {
+        return getMethods().get(name);
+    }
+
     public void setType(String type) {
         this.type = type;
     }
 
-    public Map<String, Method> getMethods() {
+    public Map<String, AppMethod> getMethods() {
         return methods;
     }
 
-    public void setMethods(Map<String, Method> methods) {
+    public void setMethods(Map<String, AppMethod> methods) {
         this.methods = methods;
+    }
+
+    @Override
+    @JsonIgnore
+    public String getFileIndicator() {
+        return "_files";
     }
 
     @Override

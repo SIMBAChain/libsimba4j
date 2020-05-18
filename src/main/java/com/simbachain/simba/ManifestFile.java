@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 SIMBA Chain Inc.
+ * Copyright (c) 2020 SIMBA Chain Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,6 +22,7 @@
 
 package com.simbachain.simba;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
@@ -29,6 +30,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  *  and size of a file. It may additionally contain the hash of the file, the hash algorithm
  *  and a uid.
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ManifestFile {
 
     
@@ -36,6 +38,8 @@ public class ManifestFile {
     private String name;
     @JsonProperty
     private String mimetype;
+    @JsonProperty
+    private String mime;
     @JsonProperty
     private long size;
     @JsonProperty
@@ -56,7 +60,10 @@ public class ManifestFile {
     }
 
     public String getMimetype() {
-        return mimetype;
+        if (mimetype != null) {
+            return mimetype;    
+        }
+        return mime;
     }
 
     public void setMimetype(String mimetype) {

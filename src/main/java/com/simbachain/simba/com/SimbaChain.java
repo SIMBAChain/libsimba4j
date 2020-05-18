@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 SIMBA Chain Inc.
+ * Copyright (c) 2020 SIMBA Chain Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -36,6 +36,7 @@ import com.simbachain.simba.CallResponse;
 import com.simbachain.simba.Funds;
 import com.simbachain.simba.JsonData;
 import com.simbachain.simba.Manifest;
+import com.simbachain.simba.Metadata;
 import com.simbachain.simba.Method;
 import com.simbachain.simba.PagedResult;
 import com.simbachain.simba.Query;
@@ -67,6 +68,13 @@ public class SimbaChain extends Simba<SimbaChainConfig> {
     public SimbaChain(String endpoint, String contract, SimbaChainConfig config) {
         this(endpoint, contract, config, new SigningConfirmation() {
         });
+    }
+
+    @Override
+    protected Metadata loadMetadata() throws SimbaException {
+        Api result = this.get(getApiPath(), jsonResponseHandler(Api.class));
+        ApiInfo info = result.getInfo();
+        return info.getAppMetadata();
     }
 
     /**
@@ -112,10 +120,9 @@ public class SimbaChain extends Simba<SimbaChainConfig> {
             String.format("%s%s%s/transaction/%s", getEndpoint(), getvPath(), getContract(), txnId),
             jsonResponseHandler(FullTransaction.class));
         String method = txn.getMethod();
-        Method m = getMetadata().getMethods()
-                                .get(method);
+        Method m = getMetadata().getMethod(method);
         if (m != null) {
-            txn.setMethodParameters(m.getParameters());
+            txn.setMethodParameters(m.getParameterMap());
         }
         return txn;
     }
@@ -331,12 +338,11 @@ public class SimbaChain extends Simba<SimbaChainConfig> {
         result.setCount(page.getCount());
         result.setNext(page.getNext());
         result.setPrevious(page.getPrevious());
-        Method m = getMetadata().getMethods()
-                                .get(method);
+        Method m = getMetadata().getMethod(method);
         List<FullTransaction> txs = page.getResults();
         for (FullTransaction tx : txs) {
             tx.setApp(getContract());
-            tx.setMethodParameters(m.getParameters());
+            tx.setMethodParameters(m.getParameterMap());
         }
         result.setResults(txs);
         if (log.isDebugEnabled()) {
@@ -353,7 +359,7 @@ public class SimbaChain extends Simba<SimbaChainConfig> {
      * @throws SimbaException if an error occurs
      */
     @Override
-    public PagedResult<Transaction> next(PagedResult results) throws SimbaException {
+    public PagedResult<Transaction> next(PagedResult<Transaction> results) throws SimbaException {
         if (results.getNext() == null) {
             return null;
         }
@@ -375,7 +381,7 @@ public class SimbaChain extends Simba<SimbaChainConfig> {
      * @throws SimbaException if an error occurs
      */
     @Override
-    public PagedResult<Transaction> previous(PagedResult results) throws SimbaException {
+    public PagedResult<Transaction> previous(PagedResult<Transaction> results) throws SimbaException {
         if (results.getPrevious() == null) {
             return null;
         }
@@ -428,7 +434,7 @@ public class SimbaChain extends Simba<SimbaChainConfig> {
         String address = this.wallet.getAddress();
 
         if (this.getMetadata()
-                .getPoa()) {
+                .isPoa()) {
             Funds f = new Funds(true, null, null);
             if (log.isDebugEnabled()) {
                 log.debug("EXIT: SimbaChain.addFunds: returning " + f);
@@ -481,7 +487,7 @@ public class SimbaChain extends Simba<SimbaChainConfig> {
             throw new SimbaException("No Wallet found", SimbaException.SimbaError.WALLET_NOT_FOUND);
         }
         if (this.getMetadata()
-                .getPoa()) {
+                .isPoa()) {
             Balance b = new Balance(true, "", "0");
             if (log.isDebugEnabled()) {
                 log.debug("EXIT: SimbaChain.getBalance: returning " + b);
@@ -525,9 +531,8 @@ public class SimbaChain extends Simba<SimbaChainConfig> {
         for (FullTransaction tx : txns) {
             tx.setApp(getContract());
             if (tx.getMethod() != null) {
-                Method m = getMetadata().getMethods()
-                                        .get(tx.getMethod());
-                tx.setMethodParameters(m.getParameters());
+                Method m = getMetadata().getMethod(tx.getMethod());
+                tx.setMethodParameters(m.getParameterMap());
             }
             populated.add(tx);
         }

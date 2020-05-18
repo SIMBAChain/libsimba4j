@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 SIMBA Chain Inc.
+ * Copyright 2020 SIMBA Chain Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software
  * and associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -22,8 +22,6 @@ package com.simbachain.simba.test;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
 
 import com.simbachain.SimbaException;
 import com.simbachain.simba.Balance;
@@ -96,13 +94,11 @@ public class SimbaChainTest {
                                                wallet));
         assertEquals(simba.getMetadata()
                           .getApiName(), "simbachain");
-        Set<String> methods = new HashSet<>();
-        methods.add("method1");
-        methods.add("method2");
-        methods.add("method3");
-        assertEquals(simba.getMetadata()
-                          .getMethods()
-                          .keySet(), methods);
+        assertNotNull(simba.getMetadata().getMethod("method1"));
+        assertNotNull(simba.getMetadata()
+                           .getMethod("method2"));
+        assertNotNull(simba.getMetadata()
+                           .getMethod("method3"));
     }
 
     @Test

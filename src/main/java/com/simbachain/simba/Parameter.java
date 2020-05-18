@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 SIMBA Chain Inc.
+ * Copyright (c) 2020 SIMBA Chain Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,46 +22,20 @@
 
 package com.simbachain.simba;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 /**
- *  Represents a method parameter of a contract method exposed by the
- *  application metadata.
+ *  A Contract Parameter
  */
-public class Parameter {
+public interface Parameter {
 
-    
-    @JsonProperty("title")
-    private String name;
-    @JsonProperty
-    private String type;
+    /**
+     * The name of the parameter.
+     * @return the name of the parameter.
+     */
+    public String getName();
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    @Override
-    public String toString() {
-        final StringBuilder sb = new StringBuilder("Parameter{");
-        sb.append("name='")
-          .append(name)
-          .append('\'');
-        sb.append(", type='")
-          .append(type)
-          .append('\'');
-        sb.append('}');
-        return sb.toString();
-    }
+    /**
+     * The data type of the parameter.
+     * @return the data type of the parameter.
+     */
+    public String getType();
 }

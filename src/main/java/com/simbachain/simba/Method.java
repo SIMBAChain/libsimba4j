@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 SIMBA Chain Inc.
+ * Copyright (c) 2020 SIMBA Chain Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,28 +23,31 @@
 package com.simbachain.simba;
 
 import java.util.Map;
+import java.util.Set;
+
 
 /**
- *  Represents a method in the application metadata.
+ *  A Contract method.
  */
-public class Method {
-    
-    private Map<String, Parameter> parameters;
+public interface Method {
 
-    public Map<String, Parameter> getParameters() {
-        return parameters;
-    }
+    /**
+     * Get a parameter by name.
+     * @param name the parameter name.
+     * @return the parameter or null.
+     */
+    public Parameter getParameter(String name);
 
-    public void setParameters(Map<String, Parameter> parameters) {
-        this.parameters = parameters;
-    }
+    /**
+     * Get the set of parameter names.
+     * @return the set of parameter names.
+     */
+    public Set<String> getParameterNames();
 
-    @Override
-    public String toString() {
-        final StringBuilder sb = new StringBuilder("Method{");
-        sb.append("parameters=")
-          .append(parameters);
-        sb.append('}');
-        return sb.toString();
-    }
+    /**
+     * Get the parameters as a map, keyed to their names.
+     * @return the parameters as a map, keyed to their names.
+     */
+    public Map<String, Parameter> getParameterMap();
+
 }

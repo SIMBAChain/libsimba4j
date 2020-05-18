@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 SIMBA Chain Inc.
+ * Copyright (c) 2020 SIMBA Chain Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -54,6 +54,10 @@ public class Query {
         public String getName() {
             return name;
         }
+        
+        public void setName(String name) {
+            this.name = name;
+        }
 
         public T getValue() {
             return value;
@@ -62,6 +66,18 @@ public class Query {
         protected String asString(String op) {
             try {
                 return name + op + "=" + URLEncoder.encode(value.toString(), "UTF-8");
+            } catch (UnsupportedEncodingException e) {
+                throw new RuntimeException("UTF-8 not supported!");
+            }
+        }
+
+        public String toJsonApiString() {
+            return null;
+        }
+
+        protected String asJsonApiString(String op) {
+            try {
+                return "filter[" + name + op + "]=" + URLEncoder.encode(value.toString(), "UTF-8");
             } catch (UnsupportedEncodingException e) {
                 throw new RuntimeException("UTF-8 not supported!");
             }
@@ -77,6 +93,10 @@ public class Query {
         public String toString() {
             return asString("_gt");
         }
+
+        public String toJsonApiString() {
+            return asJsonApiString(".gt");
+        }
     }
     public static class Lt extends Param<Number> {
 
@@ -86,6 +106,10 @@ public class Query {
 
         public String toString() {
             return asString("_lt");
+        }
+
+        public String toJsonApiString() {
+            return asJsonApiString(".lt");
         }
         
     }
@@ -98,6 +122,10 @@ public class Query {
         public String toString() {
             return asString("_gte");
         }
+
+        public String toJsonApiString() {
+            return asJsonApiString(".gte");
+        }
     }
     public static class Lte extends Param<Number> {
 
@@ -107,6 +135,10 @@ public class Query {
 
         public String toString() {
             return asString("_lte");
+        }
+
+        public String toJsonApiString() {
+            return asJsonApiString(".lte");
         }
     }
     public static class Eq extends Param<Number> {
@@ -118,6 +150,10 @@ public class Query {
         public String toString() {
             return asString("_equals");
         }
+
+        public String toJsonApiString() {
+            return asJsonApiString(".equals");
+        }
     }
     public static class Ex extends Param<String> {
 
@@ -127,6 +163,10 @@ public class Query {
 
         public String toString() {
             return asString("_exact");
+        }
+
+        public String toJsonApiString() {
+            return asJsonApiString(".exact");
         }
     }
     public static class In extends Param<String> {
@@ -138,6 +178,10 @@ public class Query {
         public String toString() {
             return asString("_contains");
         }
+
+        public String toJsonApiString() {
+            return asJsonApiString(".contains");
+        }
     }
     public static class Is extends Param<Boolean> {
 
@@ -147,6 +191,10 @@ public class Query {
 
         public String toString() {
             return asString("_exact");
+        }
+
+        public String toJsonApiString() {
+            return asJsonApiString(".exact");
         }
     }
     
@@ -206,6 +254,21 @@ public class Query {
                 Param<?> param = params.get(i);
                 sb.append(param.toString());
                 if(i < params.size() - 1) {
+                    sb.append("&");
+                }
+            }
+            return sb.toString();
+        }
+
+        public String toJsonApiString() {
+            if (params.isEmpty()) {
+                return "";
+            }
+            StringBuilder sb = new StringBuilder("?");
+            for (int i = 0; i < params.size(); i++) {
+                Param<?> param = params.get(i);
+                sb.append(param.toJsonApiString());
+                if (i < params.size() - 1) {
                     sb.append("&");
                 }
             }

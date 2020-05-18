@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 SIMBA Chain Inc.
+ * Copyright (c) 2020 SIMBA Chain Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,25 +22,15 @@
 
 package com.simbachain.simba;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 /**
- * Info section of contract API metadata.
- * We ignore everything apart from the 'x-simba-attrs' section.
+ *  Interface supported by classes that can turn themselves into JsonData.
  */
-@JsonIgnoreProperties (ignoreUnknown = true)
-public class ApiInfo {
-    
-    
-    @JsonProperty("x-simba-attrs")
-    private AppMetadata appMetadata;
-    
-    public AppMetadata getAppMetadata() {
-        return appMetadata;
-    }
+public interface Jsonable {
 
-    public void setAppMetadata(AppMetadata appMetadata) {
-        this.appMetadata = appMetadata;
-    }
+    /**
+     * Convert oneself into JsonData
+     * @return a JsonData object
+     */
+    public JsonData toJsonData();
+
 }

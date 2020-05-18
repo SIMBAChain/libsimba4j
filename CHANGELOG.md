@@ -1,12 +1,18 @@
 # Changelog
 
-## [0.1.5](https://github.com/SIMBAChain/libsimba4j/compare/v0.1.4...v0.1.5) (2020-04-25)
+## [0.1.6](https://github.com/SIMBAChain/libsimba4j/compare/v0.1.5...v0.1.6) (2020-05-18)
 
 
 ### Features
 
-* Upated Jackson databind library from 2.9.10.1 to 2.9.10.4 because of security issue. 
+* Upated Jackson databind library from 2.9.10.4 to 2.10.4.
+* Replaced some classes with interfaces for extensibility.
+* Added some new interfaces for extensibility.
+* Updated copyright  
 
+### ⚠ BREAKING CHANGES
+
+* Removed `Simba.waitForTransactionInitialized` method. This state is being deprecated.
 
 ## [0.1.4](https://github.com/SIMBAChain/libsimba4j/compare/v0.1.3...v0.1.4) (2019-11-28)
 
