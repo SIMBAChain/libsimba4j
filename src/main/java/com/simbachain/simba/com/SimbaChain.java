@@ -330,7 +330,7 @@ public class SimbaChain extends Simba<SimbaChainConfig> {
                 + params
                 + "]");
         }
-        validateQueryParameters(method, params);
+        validateQueryParameters(getMetadata(), method, params);
         String endpoint = String.format("%s%s%s/%s/%s", getEndpoint(), getvPath(), getContract(),
             method, params.toString());
         Page page = this.get(endpoint, jsonResponseHandler(Page.class));
@@ -560,7 +560,7 @@ public class SimbaChain extends Simba<SimbaChainConfig> {
         if (this.wallet == null) {
             throw new SimbaException("No Wallet found", SimbaException.SimbaError.WALLET_NOT_FOUND);
         }
-        validateParameters(method, parameters, files.length > 0);
+        validateParameters(getMetadata(), method, parameters, files.length > 0);
         JsonData realParams = parameters.copy();
         realParams.and("from", this.wallet.getAddress());
 

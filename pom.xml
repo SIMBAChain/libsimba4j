@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.simbachain</groupId>
 	<artifactId>libsimba4j</artifactId>
-	<version>0.1.6</version>
+	<version>0.1.7</version>
     <name>LibSimba4J</name>
     <description>Java Client for SIMBA Chain</description>
     <url>https://simbachain.github.io/libsimba4j/</url>

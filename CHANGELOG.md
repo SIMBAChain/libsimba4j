@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.7](https://github.com/SIMBAChain/libsimba4j/compare/v0.1.6...v0.1.7) (2020-06-28)
+
+
+### Features
+
+* Broke out generic HTTP functionality into SimbaClient  
+
 ## [0.1.6](https://github.com/SIMBAChain/libsimba4j/compare/v0.1.5...v0.1.6) (2020-05-18)
 
 
