@@ -6,6 +6,7 @@
 ### Features
 
 * Updated Jackson databind library to 2.10.5.1
+* Updated Junit library to 4.13.1
 
 ## [0.1.7](https://github.com/SIMBAChain/libsimba4j/compare/v0.1.6...v0.1.7) (2020-06-28)
 
