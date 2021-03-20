@@ -1,9 +1,21 @@
 # Changelog
 
+## [0.1.8](https://github.com/SIMBAChain/libsimba4j/compare/v0.1.7...v0.1.8) (2021-05-20)
+
+
+### Features
+
+* Updated Jackson databind library to 2.10.5.1
+
 ## [0.1.7](https://github.com/SIMBAChain/libsimba4j/compare/v0.1.6...v0.1.7) (2020-06-28)
 
 
 ### Features
+
+* Updated Jackson databind library
+
+## [0.1.8](https://github.com/SIMBAChain/libsimba4j/compare/v0.1.7...v0.1.8) (2020-05-18)
+
 
 * Broke out generic HTTP functionality into SimbaClient  
 
@@ -12,7 +24,7 @@
 
 ### Features
 
-* Upated Jackson databind library from 2.9.10.4 to 2.10.4.
+* Updated Jackson databind library from 2.9.10.4 to 2.10.4.
 * Replaced some classes with interfaces for extensibility.
 * Added some new interfaces for extensibility.
 * Updated copyright  
@@ -57,7 +69,7 @@
 
 ### Features
 
-* Upated Jackson databind library from 2.9.10 to 2.9.10.1 because of security issue. 
+* Updated Jackson databind library from 2.9.10 to 2.9.10.1 because of security issue. 
 
 
 
