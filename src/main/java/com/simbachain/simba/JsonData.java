@@ -54,6 +54,26 @@ public class JsonData {
         return new JsonData().and(key, value);
     }
 
+    public static JsonData with(String key, int value) {
+        return new JsonData().and(key, value);
+    }
+
+    public static JsonData with(String key, float value) {
+        return new JsonData().and(key, value);
+    }
+
+    public static JsonData with(String key, long value) {
+        return new JsonData().and(key, value);
+    }
+
+    public static JsonData with(String key, double value) {
+        return new JsonData().and(key, value);
+    }
+
+    public static JsonData with(String key, short value) {
+        return new JsonData().and(key, value);
+    }
+
     public static JsonData with(String key, boolean value) {
         return new JsonData().and(key, value);
     }
@@ -70,6 +90,26 @@ public class JsonData {
         return new JsonData().and(key, value);
     }
 
+    public static JsonData with(String key, int[] value) {
+        return new JsonData().and(key, value);
+    }
+
+    public static JsonData with(String key, float[] value) {
+        return new JsonData().and(key, value);
+    }
+
+    public static JsonData with(String key, double[] value) {
+        return new JsonData().and(key, value);
+    }
+
+    public static JsonData with(String key, long[] value) {
+        return new JsonData().and(key, value);
+    }
+
+    public static JsonData with(String key, short[] value) {
+        return new JsonData().and(key, value);
+    }
+
     public static JsonData with(String key, boolean[] value) {
         return new JsonData().and(key, value);
     }
@@ -79,6 +119,26 @@ public class JsonData {
     }
 
     public static JsonData with(String key, Number[][] value) {
+        return new JsonData().and(key, value);
+    }
+
+    public static JsonData with(String key, int[][] value) {
+        return new JsonData().and(key, value);
+    }
+
+    public static JsonData with(String key, float[][] value) {
+        return new JsonData().and(key, value);
+    }
+
+    public static JsonData with(String key, double[][] value) {
+        return new JsonData().and(key, value);
+    }
+
+    public static JsonData with(String key, long[][] value) {
+        return new JsonData().and(key, value);
+    }
+
+    public static JsonData with(String key, short[][] value) {
         return new JsonData().and(key, value);
     }
 
@@ -94,6 +154,26 @@ public class JsonData {
         return new JsonData().and(key, value);
     }
 
+    public static JsonData with(String key, int[][][] value) {
+        return new JsonData().and(key, value);
+    }
+
+    public static JsonData with(String key, float[][][] value) {
+        return new JsonData().and(key, value);
+    }
+
+    public static JsonData with(String key, double[][][] value) {
+        return new JsonData().and(key, value);
+    }
+
+    public static JsonData with(String key, long[][][] value) {
+        return new JsonData().and(key, value);
+    }
+
+    public static JsonData with(String key, short[][][] value) {
+        return new JsonData().and(key, value);
+    }
+
     public static JsonData with(String key, boolean[][][] value) {
         return new JsonData().and(key, value);
     }
@@ -103,6 +183,26 @@ public class JsonData {
     }
 
     public static JsonData with(String key, Number[][][][] value) {
+        return new JsonData().and(key, value);
+    }
+
+    public static JsonData with(String key, int[][][][] value) {
+        return new JsonData().and(key, value);
+    }
+
+    public static JsonData with(String key, float[][][][] value) {
+        return new JsonData().and(key, value);
+    }
+
+    public static JsonData with(String key, double[][][][] value) {
+        return new JsonData().and(key, value);
+    }
+
+    public static JsonData with(String key, long[][][][] value) {
+        return new JsonData().and(key, value);
+    }
+
+    public static JsonData with(String key, short[][][][] value) {
         return new JsonData().and(key, value);
     }
 
@@ -118,12 +218,41 @@ public class JsonData {
         return new JsonData().and(key, value);
     }
 
+    public static JsonData with(String key, Map<String, Object> value) {
+        return new JsonData().and(key, value);
+    }
+
     public JsonData and(String key, String value) {
         map.put(key, value);
         return this;
     }
 
     public JsonData and(String key, Number value) {
+        map.put(key, value);
+        return this;
+    }
+
+    public JsonData and(String key, int value) {
+        map.put(key, value);
+        return this;
+    }
+
+    public JsonData and(String key, float value) {
+        map.put(key, value);
+        return this;
+    }
+
+    public JsonData and(String key, double value) {
+        map.put(key, value);
+        return this;
+    }
+
+    public JsonData and(String key, long value) {
+        map.put(key, value);
+        return this;
+    }
+
+    public JsonData and(String key, short value) {
         map.put(key, value);
         return this;
     }
@@ -143,6 +272,31 @@ public class JsonData {
         return this;
     }
 
+    public JsonData and(String key, int[] value) {
+        map.put(key, value);
+        return this;
+    }
+
+    public JsonData and(String key, float[] value) {
+        map.put(key, value);
+        return this;
+    }
+
+    public JsonData and(String key, double[] value) {
+        map.put(key, value);
+        return this;
+    }
+
+    public JsonData and(String key, long[] value) {
+        map.put(key, value);
+        return this;
+    }
+
+    public JsonData and(String key, short[] value) {
+        map.put(key, value);
+        return this;
+    }
+
     public JsonData and(String key, boolean[] value) {
         map.put(key, value);
         return this;
@@ -154,6 +308,31 @@ public class JsonData {
     }
 
     public JsonData and(String key, Number[][] value) {
+        map.put(key, value);
+        return this;
+    }
+
+    public JsonData and(String key, int[][] value) {
+        map.put(key, value);
+        return this;
+    }
+
+    public JsonData and(String key, float[][] value) {
+        map.put(key, value);
+        return this;
+    }
+
+    public JsonData and(String key, double[][] value) {
+        map.put(key, value);
+        return this;
+    }
+
+    public JsonData and(String key, long[][] value) {
+        map.put(key, value);
+        return this;
+    }
+
+    public JsonData and(String key, short[][] value) {
         map.put(key, value);
         return this;
     }
@@ -173,6 +352,31 @@ public class JsonData {
         return this;
     }
 
+    public JsonData and(String key, int[][][] value) {
+        map.put(key, value);
+        return this;
+    }
+
+    public JsonData and(String key, float[][][] value) {
+        map.put(key, value);
+        return this;
+    }
+
+    public JsonData and(String key, double[][][] value) {
+        map.put(key, value);
+        return this;
+    }
+
+    public JsonData and(String key, long[][][] value) {
+        map.put(key, value);
+        return this;
+    }
+
+    public JsonData and(String key, short[][][] value) {
+        map.put(key, value);
+        return this;
+    }
+
     public JsonData and(String key, boolean[][][] value) {
         map.put(key, value);
         return this;
@@ -184,6 +388,31 @@ public class JsonData {
     }
 
     public JsonData and(String key, Number[][][][] value) {
+        map.put(key, value);
+        return this;
+    }
+
+    public JsonData and(String key, int[][][][] value) {
+        map.put(key, value);
+        return this;
+    }
+
+    public JsonData and(String key, float[][][][] value) {
+        map.put(key, value);
+        return this;
+    }
+
+    public JsonData and(String key, double[][][][] value) {
+        map.put(key, value);
+        return this;
+    }
+
+    public JsonData and(String key, long[][][][] value) {
+        map.put(key, value);
+        return this;
+    }
+
+    public JsonData and(String key, short[][][][] value) {
         map.put(key, value);
         return this;
     }
@@ -204,6 +433,11 @@ public class JsonData {
 
     public JsonData and(String key, List<?> value) {
         map.put(key, getList(value));
+        return this;
+    }
+
+    public JsonData and(String key, Map<String, Object> value) {
+        map.put(key, getMap(value));
         return this;
     }
 
@@ -236,11 +470,12 @@ public class JsonData {
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("JsonData{");
-          sb.append(map);
+        sb.append(map);
         sb.append('}');
         return sb.toString();
     }
 
+    @SuppressWarnings ("unchecked")
     private List<Object> getList(List<?> value) {
         List<Object> inserts = new ArrayList<>();
         for (Object o : value) {
@@ -248,10 +483,74 @@ public class JsonData {
                 inserts.add((((JsonData) o).asMap()));
             } else if (o instanceof List) {
                 inserts.add(getList((List<?>) o));
+            } else if (o instanceof Map) {
+                inserts.add(getMap((Map<String, Object>) o));
             } else {
                 inserts.add(o);
             }
         }
         return inserts;
     }
+
+    @SuppressWarnings ("unchecked")
+    private Map<String, Object> getMap(Map<String, Object> value) {
+        Map<String, Object> inserts = new HashMap<>();
+        for (String s : value.keySet()) {
+            Object o = value.get(s);
+            if (o instanceof JsonData) {
+                inserts.put(s, (((JsonData) o).asMap()));
+            } else if (o instanceof List) {
+                inserts.put(s, getList((List<?>) o));
+            } else if (o instanceof Map) {
+                inserts.put(s, getMap((Map<String, Object>) o));
+            } else {
+                if(isSupported(o.getClass(), o)) {
+                    inserts.put(s, o);
+                }
+            }
+        }
+        return inserts;
+    }
+    
+    private boolean isSupported(Class<?> cls, Object value) {
+        if(cls.equals(int.class)
+            || cls.equals(long.class)
+            || cls.equals(float.class)
+            || cls.equals(double.class)
+            || cls.equals(short.class)
+            || cls.equals(char.class)
+            || cls.equals(boolean.class))  {
+            return true;
+        }
+        if (cls.isArray()) {
+            Class<?> type = cls.getComponentType();
+            while(type.isArray()) {
+                type = type.getComponentType();
+            }
+            return isSupported(type, null);
+        }
+        if (Map.class.isAssignableFrom(cls)) {
+            return true;
+        }
+        if (List.class.isAssignableFrom(cls)) {
+            if (value != null) {
+                if (!((List<?>) value).isEmpty()) {
+                    Object v = ((List<?>) value).get(0);
+                    return isSupported(v.getClass(), v);
+                }
+            }
+            return false;
+        }
+        if (JsonData.class.isAssignableFrom(cls)) {
+            return true;
+        }
+        if (Number.class.isAssignableFrom(cls)) {
+            return true;
+        }
+        if (String.class.isAssignableFrom(cls)) {
+            return true;
+        }
+        return Boolean.class.isAssignableFrom(cls);
+    }
+    
 }

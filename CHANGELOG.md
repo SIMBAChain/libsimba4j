@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.8](https://github.com/SIMBAChain/libsimba4j/compare/v0.1.8...v0.1.9) (2021-05-22)
+
+### Features
+
+* Improvements to JsonData class
+
 ## [0.1.8](https://github.com/SIMBAChain/libsimba4j/compare/v0.1.7...v0.1.8) (2021-05-20)
 
 
