@@ -1,6 +1,12 @@
 # Changelog
 
-## [0.1.8](https://github.com/SIMBAChain/libsimba4j/compare/v0.1.8...v0.1.9) (2021-05-22)
+## [0.1.10](https://github.com/SIMBAChain/libsimba4j/compare/v0.1.9...v0.1.10) (2021-05-28)
+
+### Bug Fixes
+
+* Fix bug in parameter validation
+
+## [0.1.9](https://github.com/SIMBAChain/libsimba4j/compare/v0.1.8...v0.1.9) (2021-05-22)
 
 ### Features
 

@@ -148,7 +148,7 @@ public abstract class SimbaClient {
             if (name.contains(".")) {
                 name = name.substring(name.indexOf(".") + 1);
                 if (name.contains(".")) {
-                    name = name.substring(0, name.indexOf(".") + 1);
+                    name = name.substring(0, name.indexOf("."));
                 }
             }
             if (m.getParameterMap()
