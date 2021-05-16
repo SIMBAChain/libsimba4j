@@ -59,6 +59,17 @@ public abstract class Wallet {
     public abstract String generateWallet(String passkey) throws SimbaException;
 
     /**
+     * Generate a new Wallet.
+     *
+     * @param passkey the password used for the Wallet.
+     * @param privateKey the private key used to get the credentials.
+     * @return The location of the created Wallet. What this actually represents is dependent on the
+     * Wallet implementation.
+     * @throws SimbaException if an error occurs.
+     */
+    public abstract String generateWallet(String passkey, String privateKey) throws SimbaException;
+
+    /**
      * Generate a Wallet that can be recreated elsewhere with a mnemonic.
      * Once this method completes, the getMnemonic function will return the
      * mnemonic used when generating the wallet. This is the only circumstance
@@ -144,6 +155,22 @@ public abstract class Wallet {
     }
 
     /**
+     * Convenience method to check if the Wallet exists and if not, create it. Then try to load it.
+     *
+     * @param passkey  The password to possibly create and then load the Wallet.
+     * @param privateKey The private key to use.
+     * @return The location of the Wallet.
+     * @throws SimbaException if an error occurs.
+     */
+    public String loadOrCreatePrivateKeyWallet(String passkey, String privateKey) throws SimbaException {
+
+        if (!walletExists()) {
+            generateWallet(passkey, privateKey);
+        }
+        return loadWallet(passkey);
+    }
+
+    /**
      * Returns the private key for the wallet in hex format.
      * Note: this is without the '0x' prefix.
      *
@@ -193,7 +220,7 @@ public abstract class Wallet {
      * @return the Credentials from a loaded Wallet.
      * @see org.web3j.crypto.Credentials
      */
-    protected abstract Credentials getCredentials();
+    public abstract Credentials getCredentials();
     
 
 }

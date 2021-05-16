@@ -31,6 +31,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -481,14 +482,33 @@ public abstract class SimbaClient {
         }
     }
 
+    protected <R> R post(String endpoint, Map<String, Object> data, ResponseHandler<R> handler, Map<String, String> headers)
+        throws SimbaException {
+        return post(endpoint, data, handler, headers, new UploadFile[0]);
+    }
+
+    protected <R> R post(String endpoint, JsonData data, ResponseHandler<R> handler, Map<String, String> headers)
+        throws SimbaException {
+        return post(endpoint, data, handler, headers, new UploadFile[0]);
+    }
+
+    protected <R> R post(String endpoint,
+        JsonData data,
+        ResponseHandler<R> handler,
+        Map<String, String> headers,
+        UploadFile... files) throws SimbaException {
+        return post(endpoint, data.asMap(), handler, headers, files);
+    }
+
     protected <R> R post(String endpoint, Map<String, Object> data, ResponseHandler<R> handler)
         throws SimbaException {
-        return post(endpoint, data, handler, new UploadFile[0]);
+        return post(endpoint, data, handler, new HashMap<>());
     }
 
     protected <R> R post(String endpoint,
         Map<String, Object> data,
         ResponseHandler<R> handler,
+        Map<String, String> clientHeaders,
         UploadFile... files) throws SimbaException {
         if (log.isDebugEnabled()) {
             Object f = files == null ? "" : Arrays.asList(files);
@@ -512,6 +532,11 @@ public abstract class SimbaClient {
                 httpPost.setHeader(s, headers.get(s));
             }
         }
+        if (clientHeaders != null) {
+            for (String s : clientHeaders.keySet()) {
+                httpPost.setHeader(s, clientHeaders.get(s));
+            }
+        }
         try {
             return this.client.execute(httpPost, handler);
         } catch (Exception e) {
@@ -528,7 +553,7 @@ public abstract class SimbaClient {
         JsonData data,
         ResponseHandler<R> handler,
         UploadFile... files) throws SimbaException {
-        return post(endpoint, data.asMap(), handler, files);
+        return post(endpoint, data.asMap(), handler, new HashMap<>(), files);
     }
 
     protected <R> R get(String endpoint, ResponseHandler<R> handler) throws SimbaException {

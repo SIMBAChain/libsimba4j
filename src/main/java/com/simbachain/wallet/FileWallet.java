@@ -110,6 +110,21 @@ public class FileWallet extends Wallet {
         }
     }
 
+    @Override
+    public String generateWallet(String passkey, String privateKey) throws SimbaException {
+        if (walletExists()) {
+            throw new SimbaException("Error generating wallet. A wallet already exists.",
+                SimbaException.SimbaError.WALLET_EXISTS);
+        }
+        try {
+            Credentials creds = Credentials.create(privateKey);
+            String filename = WalletUtils.generateWalletFile(passkey, creds.getEcKeyPair(), walletDir, true);
+            return new File(walletDir, filename).getAbsolutePath();
+        } catch (Exception e) {
+            throw new SimbaException("Error generating wallet", SimbaException.SimbaError.WALLET_GENERATE_FAILED, e);
+        }
+    }
+
     /**
      * Generate a Wallet that can be recreated elsewhere with a mnemonic.
      * Once this method completes, the getMnemonic function will return the
@@ -250,7 +265,7 @@ public class FileWallet extends Wallet {
      * @see org.web3j.crypto.Credentials
      */
     @Override
-    protected synchronized Credentials getCredentials() {
+    public synchronized Credentials getCredentials() {
         return this.credentials;
     }
 

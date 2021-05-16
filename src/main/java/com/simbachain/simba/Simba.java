@@ -23,6 +23,7 @@
 package com.simbachain.simba;
 
 import java.io.OutputStream;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -145,6 +146,20 @@ public abstract class Simba<C extends SimbaConfig> extends SimbaClient {
      * @throws SimbaException if an error occurs
      */
     public abstract CallResponse callMethod(String method, JsonData parameters, UploadFile... files)
+        throws SimbaException;
+
+    /**
+     * Invoke a particular method of a smart contract via the SIMBA HTTP API.
+     *
+     * @param method     The method name
+     * @param parameters The parameters
+     * @param headers    Client provided headers. Auth headers should not be included.
+     * @param files      optional list of UploadFile objects
+     * @return a CallResponse object containing the unique ID of the call.
+     * @throws SimbaException if an error occurs
+     */
+    public abstract CallResponse callMethod(String method, JsonData parameters,
+        Map<String, String> headers, UploadFile... files)
         throws SimbaException;
 
     /**

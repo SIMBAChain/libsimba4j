@@ -139,7 +139,15 @@ public class SimbaChain extends Simba<SimbaChainConfig> {
     @Override
     public CallResponse callMethod(String method, JsonData parameters, UploadFile... files)
         throws SimbaException {
-        return callMethod(this.retrySignAttempts, method, parameters, files);
+        return callMethod(this.retrySignAttempts, method, parameters, new HashMap<>(), files);
+    }
+
+    @Override
+    public CallResponse callMethod(String method,
+        JsonData parameters,
+        Map<String, String> headers,
+        UploadFile... files) throws SimbaException {
+        return callMethod(this.retrySignAttempts, method, parameters, headers, files);
     }
 
     /**
@@ -542,6 +550,7 @@ public class SimbaChain extends Simba<SimbaChainConfig> {
     private CallResponse callMethod(int attempt,
         String method,
         JsonData parameters,
+        Map<String, String> headers,
         UploadFile... files) throws SimbaException {
         if (log.isDebugEnabled()) {
             Object f = files.length == 0 ? "" : Arrays.asList(files);
@@ -567,7 +576,7 @@ public class SimbaChain extends Simba<SimbaChainConfig> {
         String endpoint = String.format("%s%s%s/%s/", getEndpoint(), getvPath(), getContract(),
             method);
         SigningTransaction response = this.post(endpoint, realParams,
-            jsonResponseHandler(SigningTransaction.class), files);
+            jsonResponseHandler(SigningTransaction.class), headers, files);
         if (!getSigningConfirmation().confirm(response)) {
             throw new SimbaException(response.toString(), SimbaException.SimbaError.SIGN_REJECTED);
         }
@@ -592,7 +601,7 @@ public class SimbaChain extends Simba<SimbaChainConfig> {
             if (log.isDebugEnabled()) {
                 log.debug("EXIT: SimbaChain.callMethod: tryng again with attempts left: " + attempt);
             }
-            return callMethod(attempt, method, parameters, files);
+            return callMethod(attempt, method, parameters, headers, files);
         }
     }
     

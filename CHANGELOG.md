@@ -1,18 +1,25 @@
 # Changelog
 
-## [0.1.10](https://github.com/SIMBAChain/libsimba4j/compare/v0.1.9...v0.1.10) (2021-05-28)
+## [0.1.11](https://github.com/SIMBAChain/libsimba4j/compare/v0.1.10...v0.1.11) (2021-05-16)
+
+### Features
+
+* Create Wallet from private key.
+* Add headers map to callMethod at interface level. This is used for the platform impl.
+
+## [0.1.10](https://github.com/SIMBAChain/libsimba4j/compare/v0.1.9...v0.1.10) (2021-03-28)
 
 ### Bug Fixes
 
 * Fix bug in parameter validation
 
-## [0.1.9](https://github.com/SIMBAChain/libsimba4j/compare/v0.1.8...v0.1.9) (2021-05-22)
+## [0.1.9](https://github.com/SIMBAChain/libsimba4j/compare/v0.1.8...v0.1.9) (2021-03-22)
 
 ### Features
 
 * Improvements to JsonData class
 
-## [0.1.8](https://github.com/SIMBAChain/libsimba4j/compare/v0.1.7...v0.1.8) (2021-05-20)
+## [0.1.8](https://github.com/SIMBAChain/libsimba4j/compare/v0.1.7...v0.1.8) (2021-03-20)
 
 
 ### Features
